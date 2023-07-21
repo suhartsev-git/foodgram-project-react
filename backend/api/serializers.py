@@ -1,8 +1,9 @@
+from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from users.models import User, Subscription
-from recipes.models import Tag, Ingredient
+from recipes.models import Tag, Ingredient, Recipe
 
 
 class UserCreateSerializerCustom(UserCreateSerializer):
@@ -44,9 +45,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class BriefInfoSerialezer(serializers.ModelSerializer):
-    # image =
-    pass
-    # надо установить обработку фото
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = "__all__"
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

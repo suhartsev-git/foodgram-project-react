@@ -12,12 +12,14 @@ from api.serializers import (
     SubscriptionSerializer
 )
 from recipes.models import Tag, Ingredient
+from api.pagination import CustomLimitOnPage
 
 
 class UserViewSetCustom(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
+    pagination_class = CustomLimitOnPage
 
     @action(detail=True, methods=("post", "delete",))
     def subscribe(self, request, id=None):
@@ -43,13 +45,12 @@ class UserViewSetCustom(UserViewSet):
     def subscriptions(self, request):
         user = request.user
         queryset = Subscription.objects.filter(user=user)
-        subscription_page = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
-            subscription_page,
+            queryset,
             many=True,
             context={"request": request}
         )
-        return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
 
 class TagViewSet(viewsets.ModelViewSet):
