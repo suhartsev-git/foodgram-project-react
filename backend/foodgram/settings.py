@@ -115,6 +115,14 @@ REST_FRAMEWORK = {
     ],
 }
 
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user_create': 'api.serializers.UserCreateSerializerCustom',
+        'user': 'api.serializers.UserSerializerCustom',
+        'current_user': 'api.serializers.UserSerializerCustom',
+    }
+}
 
 AUTH_USER_MODEL = 'users.User'
 
