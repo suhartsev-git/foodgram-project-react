@@ -2,8 +2,8 @@ from djoser.views import UserViewSet
 from rest_framework import viewsets
 
 from users.models import Subscription, User
-from api.serializers import UserSerializerCustom, TagSerializer
-from recipes.models import Tag
+from api.serializers import UserSerializerCustom, TagSerializer, IngredientSerializer
+from recipes.models import Tag, Ingredient
 
 
 class UserViewSetCustom(UserViewSet):
@@ -14,3 +14,8 @@ class UserViewSetCustom(UserViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
+
+
+class IngredientViewSet(viewsets.ModelViewSet):
+    serializer_class = IngredientSerializer
+    queryset = Ingredient.objects.all()
