@@ -3,8 +3,9 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from users.models import User, Subscription
-from recipes.models import Tag, Ingredient, Recipe, ShoppingCart
-
+from recipes.models import (
+    Tag, Ingredient, Recipe, ShoppingCart, IngredientInRecipe
+)
 
 class UserCreateSerializerCustom(UserCreateSerializer):
 
@@ -52,6 +53,20 @@ class BriefInfoSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class IngredientInRecipeSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = "__all__"
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.IntegerField(
@@ -82,7 +97,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    pass
+    author = UserSerializerCustom(read_only=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
 
 
 class RecipeReadSerializer():
