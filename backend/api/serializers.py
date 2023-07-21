@@ -43,15 +43,19 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class BriefInfoSerialezer(serializers.ModelSerializer):
+    # image =
+    pass
+    # надо установить обработку фото
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-    first_name = serializers.ReadOnlyField(source='author.first_name')
-    last_name = serializers.ReadOnlyField(source='author.last_name')
-    username = serializers.ReadOnlyField(source='author.username')
-    recipes = serializers.SerializerMethodField()
-    email = serializers.ReadOnlyField(source='author.email')
-    id = serializers.ReadOnlyField(source='author.id')
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    recipes_count = serializers.IntegerField(
+        source="author.recipes.count",
+        read_only=True
+    )
+    recipes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Subscription
@@ -59,5 +63,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         return Subscription.objects.filter(
-            user=obj.user, author=obj.author
+            user=self.context["request"].user,
+            author=obj.author
         ).exists()
+
+    def get_recipes(self, obj):
+        recipes_limit = (
+            self.context["request"].query_params.get("recipes_limit")
+        )
+        queryset = (
+            obj.author.recipes.all()[:int(recipes_limit)] if recipes_limit
+            else obj.author.recipes.all()
+        )
+        return BriefInfoSerialezer(queryset, many=True).data

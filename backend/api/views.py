@@ -19,28 +19,11 @@ class UserViewSetCustom(UserViewSet):
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
 
-    @staticmethod
-    def subscribe_error_response(
-        errors, status_code=status.HTTP_400_BAD_REQUEST
-    ):
-        return Response({"errors": errors}, status=status_code)
-
-    def is_subscribed(self, user, author):
-        return Subscription.objects.filter(user=user, author=author).exists()
-
     @action(detail=True, methods=("post", "delete",))
     def subscribe(self, request, id=None):
         user = request.user
         author = get_object_or_404(User, id=id)
         if request.method == "POST":
-            if user == author:
-                return self.subscribe_error_response(
-                    "Вы не можете подписываться на самого себя"
-                )
-            if self.is_subscribed(user, author):
-                return self.subscribe_error_response(
-                    "Вы уже подписаны на данного пользователя"
-                )
             subscribe = Subscription.objects.create(user=user, author=author)
             serializer = SubscriptionSerializer(
                 subscribe, context={"request": request}
@@ -60,9 +43,9 @@ class UserViewSetCustom(UserViewSet):
     def subscriptions(self, request):
         user = request.user
         queryset = Subscription.objects.filter(user=user)
-        pages = self.paginate_queryset(queryset)
+        subscription_page = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
-            pages,
+            subscription_page,
             many=True,
             context={"request": request}
         )
