@@ -8,18 +8,22 @@ from rest_framework import viewsets, status
 
 from users.models import Subscription, User
 from api.serializers import (
-    UserSerializerCustom, TagSerializer, IngredientSerializer,
-    SubscriptionSerializer
+    UserSerializerCustom,
+    TagSerializer,
+    IngredientSerializer,
+    SubscriptionSerializer,
+    RecipeCreateSerializer,
+    RecipeReadSerializer
 )
-from recipes.models import Tag, Ingredient
-from api.pagination import CustomLimitOnPage
+from recipes.models import Tag, Ingredient, Recipe
+from api.pagination import CustomPaginLimitOnPage
 
 
 class UserViewSetCustom(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
-    pagination_class = CustomLimitOnPage
+    pagination_class = CustomPaginLimitOnPage
 
     @action(detail=True, methods=("post", "delete",))
     def subscribe(self, request, id=None):
@@ -61,3 +65,16 @@ class TagViewSet(viewsets.ModelViewSet):
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeCreateSerializer
+    pagination_class = CustomPaginLimitOnPage
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return RecipeReadSerializer
+        return RecipeCreateSerializer
+
+    pass

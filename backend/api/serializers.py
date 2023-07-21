@@ -3,7 +3,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from users.models import User, Subscription
-from recipes.models import Tag, Ingredient, Recipe
+from recipes.models import Tag, Ingredient, Recipe, ShoppingCart
 
 
 class UserCreateSerializerCustom(UserCreateSerializer):
@@ -44,7 +44,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class BriefInfoSerialezer(serializers.ModelSerializer):
+class BriefInfoSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
 
     class Meta:
@@ -78,4 +78,26 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             obj.author.recipes.all()[:int(recipes_limit)] if recipes_limit
             else obj.author.recipes.all()
         )
-        return BriefInfoSerialezer(queryset, many=True).data
+        return BriefInfoSerializer(queryset, many=True).data
+
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
+    pass
+
+
+class RecipeReadSerializer():
+    author = UserSerializerCustom(read_only=True)
+    tags = TagSerializer(read_only=True, many=True)
+    image = Base64ImageField()
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoppingCart
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        return BriefInfoSerializer(
+            instance.recipe,
+            context={'request': self.context.get('request')}
+        ).data    
