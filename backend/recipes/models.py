@@ -85,3 +85,27 @@ class Recipe(models.Model):
 
 
 class FavoriteRecipe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь"
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт"
+    )
+
+    class Meta:
+        ordering = ("-id",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"],
+                name="unique_user_recipe_favorite"
+            )
+        ]
+        verbose_name = "Избранное"
+        verbose_name_plural = "Избранное"
+
+    def __str__(self):
+        return f"{self.user} добавил {self.recipe.name} в избраннное"
