@@ -47,6 +47,11 @@ class Tag(models.Model):
         verbose_name="Slug"
     )
 
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+
 
 class Recipe(models.Model):
     author = models.ForeignKey(
@@ -68,6 +73,10 @@ class Recipe(models.Model):
         verbose_name="Ингридиенты",
     )
     text = models.TextField(verbose_name="Описание")
+    image = models.ImageField(
+        upload_to="recipes/image/",
+        verbose_name="Изображение"
+    )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name="Время готовки"
     )
@@ -147,7 +156,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        ordering = ("-id")
+        ordering = ("-id",)
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "recipe"],
