@@ -15,9 +15,12 @@ from api.serializers import (
     SubscriptionSerializer,
     RecipeCreateSerializer,
     RecipeReadSerializer,
-    ShoppingCartSerializer
+    ShoppingCartSerializer,
+    FavoriteSerializer
 )
-from recipes.models import Tag, Ingredient, Recipe, IngredientInRecipe
+from recipes.models import (
+    Tag, Ingredient, Recipe, IngredientInRecipe, ShoppingCart,
+)
 from api.pagination import CustomPaginLimitOnPage
 
 
@@ -94,7 +97,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return "\n".join(list_of_products)
 
     @action(detail=False, methods=("GET",))
-    def download_list_of_products(self, request):
+    def download_shopping_cart(self, request):
         ingredients = IngredientInRecipe.objects.filter(
             recipe__shopping_list__user=request.user
         ).order_by("ingredient__name").values(
@@ -117,6 +120,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = ShoppingCartSerializer(
             data=data,
             context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=("DELETE"),)
+    def destroy_shopping_cart(self, request, pk):
+        get_object_or_404(
+            ShoppingCart,
+            recipe__id=pk,
+            user=request.user
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=("POST"),)
+    def favorite(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        data = {"recipe": recipe.id, "user": request.user.id}
+        serializer = FavoriteSerializer(
+            data=data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()

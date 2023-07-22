@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from users.models import User, Subscription
 from recipes.models import (
-    Tag, Ingredient, Recipe, ShoppingCart, IngredientInRecipe
+    Tag, Ingredient, Recipe, ShoppingCart, IngredientInRecipe, FavoriteRecipe
 )
 
 
@@ -215,8 +215,25 @@ class RecipeReadSerializer():
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = ShoppingCart
+        fields = (
+            "user",
+            "recipe",
+        )
+
+    def to_representation(self, instance):
+        return BriefInfoSerializer(
+            instance.recipe,
+            context={'request': self.context.get('request')}
+        ).data
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FavoriteRecipe
         fields = (
             "user",
             "recipe",
