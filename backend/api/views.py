@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from django.db.models import Sum
 from rest_framework.decorators import action
 from djoser.views import UserViewSet
 from rest_framework.permissions import IsAuthenticated
@@ -13,9 +14,10 @@ from api.serializers import (
     IngredientSerializer,
     SubscriptionSerializer,
     RecipeCreateSerializer,
-    RecipeReadSerializer
+    RecipeReadSerializer,
+    ShoppingCartSerializer
 )
-from recipes.models import Tag, Ingredient, Recipe
+from recipes.models import Tag, Ingredient, Recipe, IngredientInRecipe
 from api.pagination import CustomPaginLimitOnPage
 
 
@@ -73,8 +75,49 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPaginLimitOnPage
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request.method == "GET":
             return RecipeReadSerializer
         return RecipeCreateSerializer
 
-    pass
+    @staticmethod
+    def create_list_of_products(ingredients):
+        list_of_products = ["Купить в магазине:"]
+        for ingredient in ingredients:
+            ingredient_name = ingredient.get("ingredient__name", "")
+            measurement_unit = ingredient.get(
+                "ingredient__measurement_unit", ""
+            )
+            amount = ingredient.get("amount", "")
+            list_of_products.append(
+                f"{ingredient_name} ({measurement_unit}) - {amount}"
+            )
+        return "\n".join(list_of_products)
+
+    @action(detail=False, methods=("GET",))
+    def download_list_of_products(self, request):
+        ingredients = IngredientInRecipe.objects.filter(
+            recipe__shopping_list__user=request.user
+        ).order_by("ingredient__name").values(
+            "ingredient__name",
+            "ingredient__measurement_unit"
+        ).annotate(amount=Sum('amount'))
+        shopping_list_content = self.create_list_of_products(ingredients)
+        file_name = "list_of_products.txt"
+        response = HttpResponse(
+            shopping_list_content,
+            content_type='text/plain'
+        )
+        response["Content-Disposition"] = f'attachment; filename="{file_name}"'
+        return response
+
+    @action(detail=True, methods=("POST"))
+    def shopping_cart(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        data = {"recipe": recipe.id, "user": request.user.id}
+        serializer = ShoppingCartSerializer(
+            data=data,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
