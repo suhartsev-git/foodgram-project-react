@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from users.models import User, Subscription
 from recipes.models import (
-    Tag, Ingredient, Recipe, ShoppingCart, IngredientInRecipe, FavoriteRecipe
+    Tag, Ingredient, Recipe, ShoppingCart, IngredientRecipe, Favorite
 )
 
 
@@ -100,7 +100,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = IngredientInRecipe
+        model = IngredientRecipe
         fields = (
             "id",
             "name",
@@ -198,7 +198,7 @@ class RecipeReadSerializer():
         )
 
     def get_ingredients(self, obj):
-        ingredients_list = IngredientInRecipe.objects.filter(recipe=obj)
+        ingredients_list = IngredientRecipe.objects.filter(recipe=obj)
         return IngredientInRecipeSerializer(ingredients_list, many=True).data
 
     def get_is_in_shopping_cart(self, obj):
@@ -215,7 +215,7 @@ class RecipeReadSerializer():
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = ShoppingCart
         fields = (
@@ -233,7 +233,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = FavoriteRecipe
+        model = Favorite
         fields = (
             "user",
             "recipe",

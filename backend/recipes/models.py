@@ -101,7 +101,7 @@ class Recipe(models.Model):
         return self.name
 
 
-class IngredientInRecipe(models.Model):
+class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
@@ -123,7 +123,7 @@ class IngredientInRecipe(models.Model):
         verbose_name_plural = "Ингредиенты рецепта"
 
 
-class FavoriteRecipe(models.Model):
+class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

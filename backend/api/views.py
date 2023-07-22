@@ -19,7 +19,7 @@ from api.serializers import (
     FavoriteSerializer
 )
 from recipes.models import (
-    Tag, Ingredient, Recipe, IngredientInRecipe, ShoppingCart,
+    Tag, Ingredient, Recipe, IngredientRecipe, ShoppingCart,
 )
 from api.pagination import CustomPaginLimitOnPage
 
@@ -98,7 +98,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=("GET",))
     def download_shopping_cart(self, request):
-        ingredients = IngredientInRecipe.objects.filter(
+        ingredients = IngredientRecipe.objects.filter(
             recipe__shopping_list__user=request.user
         ).order_by("ingredient__name").values(
             "ingredient__name",
