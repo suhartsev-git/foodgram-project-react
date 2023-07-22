@@ -1,3 +1,4 @@
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -18,7 +19,8 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        verbose_name="username"
+        verbose_name="username",
+        validators=(UnicodeUsernameValidator(),)
     )
     first_name = models.CharField(
         max_length=150,

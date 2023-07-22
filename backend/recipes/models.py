@@ -6,12 +6,12 @@ from users.models import User
 
 class Ingredient(models.Model):
     name = models.CharField(
-        max_length=150,
+        max_length=200,
         db_index=True,
         verbose_name="Название ингредиента"
     )
     measurement_unit = models.CharField(
-        max_length=150,
+        max_length=200,
         verbose_name="Единицы измерения"
     )
 
@@ -31,7 +31,7 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(
-        max_length=150,
+        max_length=200,
         unique=True,
         db_index=True,
         verbose_name="Название тега"
@@ -42,7 +42,7 @@ class Tag(models.Model):
         verbose_name="HEX-код"
     )
     slug = models.SlugField(
-        max_length=150,
+        max_length=200,
         unique=True,
         verbose_name="Slug"
     )
@@ -61,7 +61,7 @@ class Recipe(models.Model):
         related_name="recipes"
     )
     name = models.CharField(
-        max_length=150,
+        max_length=200,
         verbose_name="Название рецепта",
     )
     tags = models.ManyToManyField(
@@ -78,6 +78,7 @@ class Recipe(models.Model):
         verbose_name="Изображение"
     )
     cooking_time = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)],
         verbose_name="Время готовки"
     )
     pub_date = models.DateTimeField(
