@@ -171,6 +171,28 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
+    def create_ingredients(self, recipe, ingredients_data):
+        ingredient_liist = []
+        for ingredient_data in ingredients_data:
+            ingredient_liist.append(
+                IngredientRecipe(
+                    ingredient=ingredient_data.pop('id'),
+                    amount=ingredient_data.pop('amount'),
+                    recipe=recipe,
+                )
+            )
+        IngredientRecipe.objects.bulk_create(ingredient_liist)
+
+    def create(self, validated_data):
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user, **validated_data
+        )
+        recipe.tags.set(tags_data)
+        self.create_ingredients(recipe, ingredients_data)
+        return recipe
+
 
 class RecipeReadSerializer():
     author = UserSerializerCustom(read_only=True)
