@@ -1,27 +1,32 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Sum
-from rest_framework.decorators import action
 from djoser.views import UserViewSet
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 
+from api.pagination import CustomPaginLimitOnPage
 from users.models import Subscription, User
 from api.serializers import (
-    UserSerializerCustom,
-    TagSerializer,
-    IngredientSerializer,
+    ShoppingCartSerializer,
     SubscriptionSerializer,
     RecipeCreateSerializer,
+    UserSerializerCustom,
+    IngredientSerializer,
     RecipeReadSerializer,
-    ShoppingCartSerializer,
-    FavoriteSerializer
+    FavoriteSerializer,
+    TagSerializer
 )
 from recipes.models import (
-    Tag, Ingredient, Recipe, IngredientRecipe, ShoppingCart,
+    IngredientRecipe,
+    ShoppingCart,
+    Ingredient,
+    Favorite,
+    Recipe,
+    Tag
 )
-from api.pagination import CustomPaginLimitOnPage
 
 
 class UserViewSetCustom(UserViewSet):
@@ -76,14 +81,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
             return RecipeReadSerializer
         return RecipeCreateSerializer
 
-    @staticmethod
-    def create_list_of_products(ingredients):
+    def create_list_of_products(self, ingredients):
         list_of_products = ["Купить в магазине:"]
         for ingredient in ingredients:
             ingredient_name = ingredient.get("ingredient__name", "")
@@ -113,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = f'attachment; filename="{file_name}"'
         return response
 
-    @action(detail=True, methods=("POST"))
+    @action(detail=True, methods=("POST",))
     def shopping_cart(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         data = {"recipe": recipe.id, "user": request.user.id}
@@ -125,7 +130,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=("DELETE"),)
+    @shopping_cart.mapping.delete
     def destroy_shopping_cart(self, request, pk):
         get_object_or_404(
             ShoppingCart,
@@ -134,7 +139,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=("POST"),)
+    @action(detail=True, methods=("POST",))
     def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         data = {"recipe": recipe.id, "user": request.user.id}
@@ -144,3 +149,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @favorite.mapping.delete
+    def destroy_favorite(self, request, pk):
+        get_object_or_404(
+            Favorite,
+            recipe=get_object_or_404(Recipe, id=pk),
+            user=request.user
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
