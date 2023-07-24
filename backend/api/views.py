@@ -11,7 +11,10 @@ from rest_framework import viewsets, status
 from api.pagination import CustomPaginLimitOnPage
 from api.filters import SearchIngredientFilter
 from users.models import Subscription, User
-from api.permissions import AuthorOrReadOnly
+from api.permissions import (
+    AuthorOrReadOnly,
+    AdminOrReadOnly
+)
 from api.serializers import (
     ShoppingCartSerializer,
     SubscriptionSerializer,
@@ -156,10 +159,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
+    permission_classes = (AdminOrReadOnly,)
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (SearchIngredientFilter,)
     search_fields = ("^name",)
