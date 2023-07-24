@@ -4,8 +4,8 @@ from recipes.models import Ingredient
 
 
 class SearchIngredientFilter(SearchFilter):
-    search_param = 'name'
+    search_param = "name"
 
     class Meta:
         model = Ingredient
-        fields = ('name',)
+        fields = ("name",)
