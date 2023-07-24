@@ -2,13 +2,14 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Sum
 from djoser.views import UserViewSet
-from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import viewsets, status
 
 from api.pagination import CustomPaginLimitOnPage
 from users.models import Subscription, User
+from api.permissions import AuthorOrReadOnly
 from api.serializers import (
     ShoppingCartSerializer,
     SubscriptionSerializer,
@@ -35,7 +36,7 @@ class UserViewSetCustom(UserViewSet):
     permission_classes = (IsAuthenticated,)
     pagination_class = CustomPaginLimitOnPage
 
-    @action(detail=True, methods=("post", "delete",))
+    @action(detail=True, methods=("POST", "DELETE",))
     def subscribe(self, request, id=None):
         user = request.user
         author = get_object_or_404(User, id=id)
@@ -45,7 +46,6 @@ class UserViewSetCustom(UserViewSet):
                 subscribe, context={"request": request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         if request.method == "DELETE":
             subscription = get_object_or_404(
                 Subscription,
@@ -55,7 +55,7 @@ class UserViewSetCustom(UserViewSet):
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=("get",))
+    @action(detail=False, methods=("GET",))
     def subscriptions(self, request):
         user = request.user
         queryset = Subscription.objects.filter(user=user)
@@ -67,21 +67,11 @@ class UserViewSetCustom(UserViewSet):
         return Response(serializer.data)
 
 
-class TagViewSet(viewsets.ModelViewSet):
-    serializer_class = TagSerializer
-    queryset = Tag.objects.all()
-
-
-class IngredientViewSet(viewsets.ModelViewSet):
-    serializer_class = IngredientSerializer
-    queryset = Ingredient.objects.all()
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AuthorOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -158,3 +148,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=request.user
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
+
+
+class IngredientViewSet(viewsets.ModelViewSet):
+    serializer_class = IngredientSerializer
+    queryset = Ingredient.objects.all()

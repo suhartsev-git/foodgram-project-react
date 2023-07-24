@@ -4,7 +4,12 @@ from rest_framework import serializers
 
 from users.models import User, Subscription
 from recipes.models import (
-    Tag, Ingredient, Recipe, ShoppingCart, IngredientRecipe, Favorite
+    IngredientRecipe,
+    ShoppingCart,
+    Ingredient,
+    Favorite,
+    Recipe,
+    Tag
 )
 
 
