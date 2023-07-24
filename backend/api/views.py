@@ -2,12 +2,14 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Sum
 from djoser.views import UserViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 
 from api.pagination import CustomPaginLimitOnPage
+from api.filters import SearchIngredientFilter
 from users.models import Subscription, User
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (
@@ -72,6 +74,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
     permission_classes = (AuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -158,3 +161,5 @@ class TagViewSet(viewsets.ModelViewSet):
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
+    filter_backends = (SearchIngredientFilter,)
+    search_fields = ('^name',)
