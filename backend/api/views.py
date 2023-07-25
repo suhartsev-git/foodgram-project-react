@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 
+from api.filters import SearchIngredientFilter, RecipeFilter
 from api.pagination import CustomPaginLimitOnPage
-from api.filters import SearchIngredientFilter
 from users.models import Subscription, User
 from api.permissions import (
     AuthorOrReadOnly,
@@ -78,6 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPaginLimitOnPage
     permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method == "GET":
