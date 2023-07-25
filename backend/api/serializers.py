@@ -19,6 +19,7 @@ class UserCreateSerializerCustom(UserCreateSerializer):
         model = User
         fields = (
             "email",
+            "id",
             "username",
             "first_name",
             "last_name",
@@ -217,11 +218,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.tags.clear()
-        IngredientRecipe.objects.filter(recipe=instance).delete()
-        instance.tags.set(validated_data.pop('tags'))
+        tags = validated_data.pop('tags')
+        instance.tags.set(tags)
+        instance.ingredients.clear()
         ingredients = validated_data.pop('ingredients')
         self.create_ingredients(instance, ingredients)
-        return super().update(instance, validated_data)
+        return super().update(
+            instance,
+            validated_data
+        )
 
     def to_representation(self, instance):
         return RecipeReadSerializer(
