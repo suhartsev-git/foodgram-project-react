@@ -17,6 +17,9 @@ class SearchIngredientFilter(SearchFilter):
     search_param = "name"
 
     class Meta:
+        """Метакласс 'SearchIngredientFilter.Meta'
+        определяет свойства для фильтрации поиска.
+        """
         model = Ingredient
         fields = ("name",)
 
@@ -40,6 +43,9 @@ class RecipeFilter(FilterSet):
     )
 
     class Meta:
+        """Метакласс 'RecipeFilter' 
+        определяет свойства фильтрации для модели Recipe
+        """
         model = Recipe
         fields = (
             "is_in_shopping_cart",
