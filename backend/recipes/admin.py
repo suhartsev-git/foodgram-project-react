@@ -11,10 +11,20 @@ from recipes.models import (
 
 
 class IngredientInline(admin.TabularInline):
+    """
+    Встроенная административная форма для модели IngredientRecipe.
+    Используется для отображения ингредиентов рецепта
+    в административной панели.
+    """
     model = IngredientRecipe
 
 
 class RecipeAdmin(admin.ModelAdmin):
+    """
+    Класс административной формы для модели Recipe.
+    Используется для настройки отображения и фильтрации рецептов
+    в административной панели.
+    """
     list_display = (
         "name",
         "author",
@@ -33,10 +43,16 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
     def get_favorites(self, obj):
+        """
+        Возвращает количество добавлений рецепта в избранное.
+        """
         return obj.favorites.count()
     get_favorites.short_description = "Избранное"
 
     def get_ingredients(self, obj):
+        """
+        Возвращает строку с перечислением ингредиентов рецепта.
+        """
         return ', '.join([
             ingredients.name for ingredients
             in obj.ingredients.all()])
@@ -44,6 +60,11 @@ class RecipeAdmin(admin.ModelAdmin):
 
 
 class TagAdmin(admin.ModelAdmin):
+    """
+    Класс административной формы для модели Tag.
+    Используется для настройки отображения и фильтрации тегов
+    в административной панели.
+    """
     list_display = (
         "name",
         "color",
@@ -56,6 +77,11 @@ class TagAdmin(admin.ModelAdmin):
 
 
 class IngredientAdmin(admin.ModelAdmin):
+    """
+    Класс административной формы для модели Ingredient.
+    Используется для настройки отображения и фильтрации ингредиентов
+    в административной панели.
+    """
     list_display = ("name", "measurement_unit",)
     search_fields = ("name",)
     list_filter = ("name",)
@@ -63,6 +89,11 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class FavoriteAdmin(admin.ModelAdmin):
+    """
+    Класс административной формы для модели Favorite.
+    Используется для настройки отображения и фильтрации избранных рецептов
+    в административной панели.
+    """
     list_display = ("user", "recipe",)
     list_filter = ("user", "recipe",)
     search_fields = ("user", "recipe",)
@@ -70,6 +101,11 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):
+    """
+    Класс административной формы для модели ShoppingCart.
+    Используется для настройки отображения и фильтрации списка покупок
+    в административной панели.
+    """
     list_display = ("recipe", "user",)
     list_filter = ("recipe", "user",)
     search_fields = ("user", )

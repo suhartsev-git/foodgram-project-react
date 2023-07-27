@@ -4,6 +4,9 @@ from users.models import User, Subscription
 
 
 class UserAdmin(admin.ModelAdmin):
+    """
+    Административная модель для пользователей.
+    """
     list_display = (
         "username",
         "email",
@@ -17,6 +20,10 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class SubscriptionAdmin(admin.ModelAdmin):
+    """
+    Административная модель для подписок пользователей
+    на авторов рецептов.
+    """
     list_display = (
         "pk",
         "user",

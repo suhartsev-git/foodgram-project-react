@@ -36,12 +36,21 @@ from recipes.models import (
 
 
 class UserViewSetCustom(UserViewSet):
+    """
+    Кастомный ViewSet для модели User.
+    Включает дополнительные действия подписки
+    и получения списка подписок пользователя.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
 
     @action(detail=True, methods=("POST", "DELETE",))
     def subscribe(self, request, id=None):
+        """
+        Добавляет или удаляет подписку текущего пользователя
+        на указанного автора.
+        """
         user = request.user
         author = get_object_or_404(User, id=id)
         if request.method == "POST":
@@ -50,17 +59,19 @@ class UserViewSetCustom(UserViewSet):
                 subscribe, context={"request": request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == "DELETE":
-            subscription = get_object_or_404(
-                Subscription,
-                user=user,
-                author=author
-            )
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription = get_object_or_404(
+            Subscription,
+            user=user,
+            author=author
+        )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=("GET",))
     def subscriptions(self, request):
+        """
+        Получает список подписок текущего пользователя.
+        """
         user = request.user
         queryset = Subscription.objects.filter(user=user)
         serializer = SubscriptionSerializer(
@@ -72,6 +83,12 @@ class UserViewSetCustom(UserViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для модели Recipe.
+    Включает дополнительные действия для работы с рецептами:
+    добавление в избранное, добавление в список покупок,
+    скачивание списка продуктов.
+    """
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
@@ -80,11 +97,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
+        """
+        Возвращает соответствующий класс сериализатора
+        в зависимости от типа запроса.
+        """
         if self.request.method == "GET":
             return RecipeReadSerializer
         return RecipeCreateSerializer
 
     def create_list_of_products(self, ingredients):
+        """
+        Создает список продуктов на основе переданных ингредиентов.
+        """
         list_of_products = ["Купить в магазине:"]
         for ingredient in ingredients:
             ingredient_name = ingredient.get("ingredient__name", "")
@@ -99,6 +123,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=("GET",))
     def download_shopping_cart(self, request):
+        """
+        Экспортирует список покупок пользователя
+        в текстовый файл для скачивания.
+        """
         ingredients = IngredientRecipe.objects.filter(
             recipe__shopping_list__user=request.user
         ).order_by("ingredient__name").values(
@@ -116,6 +144,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=("POST",))
     def shopping_cart(self, request, pk):
+        """
+        Добавляет рецепт в список покупок текущего пользователя.
+        """
         recipe = get_object_or_404(Recipe, id=pk)
         data = {"recipe": recipe.id, "user": request.user.id}
         serializer = ShoppingCartSerializer(
@@ -128,6 +159,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @shopping_cart.mapping.delete
     def destroy_shopping_cart(self, request, pk):
+        """
+        Удаляет рецепт из списка покупок текущего пользователя.
+        """
         get_object_or_404(
             ShoppingCart,
             recipe__id=pk,
@@ -137,6 +171,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=("POST",))
     def favorite(self, request, pk):
+        """
+        Добавляет рецепт в избранное текущего пользователя.
+        """
         recipe = get_object_or_404(Recipe, id=pk)
         data = {"recipe": recipe.id, "user": request.user.id}
         serializer = FavoriteSerializer(
@@ -148,6 +185,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @favorite.mapping.delete
     def destroy_favorite(self, request, pk):
+        """
+        Удаляет рецепт из избранного текущего пользователя.
+        """
         get_object_or_404(
             Favorite,
             recipe=get_object_or_404(Recipe, id=pk),
@@ -157,12 +197,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class TagViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для модели Tag.
+    Включает стандартные CRUD-операции.
+    Доступ только для администраторов
+    или только чтение.
+    """
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
     permission_classes = (AdminOrReadOnly,)
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для модели Ingredient.
+    Включает стандартные CRUD-операции.
+    Доступ только для администраторов
+    или только чтение.
+    Поддерживает фильтрацию по имени ингредиента.
+    """
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     permission_classes = (AdminOrReadOnly,)

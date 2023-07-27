@@ -155,3 +155,12 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MAX_COUNT_CHARS_TWO_HUNDRED_FIFTY_FOUR = 254
+MAX_COUNT_CHARS_TWO_HUNDRED = 200
+MAX_COUNT_CHARS_ONE_HUNDRED_FIFTY = 150
+MAX_COUNT_CHARS_SEVEN = 7
+
+SIX_ELEMENTS_ON_PAGE = 6
+
+MIN_VALUE_IS_ONE = 1
