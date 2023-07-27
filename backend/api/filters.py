@@ -17,7 +17,7 @@ class SearchIngredientFilter(SearchFilter):
     search_param = "name"
 
     class Meta:
-        """Метакласс 'SearchIngredientFilter.Meta'
+        """Метакласс 'SearchIngredientFilter'
         определяет свойства для фильтрации поиска.
         """
         model = Ingredient
@@ -43,7 +43,7 @@ class RecipeFilter(FilterSet):
     )
 
     class Meta:
-        """Метакласс 'RecipeFilter' 
+        """Метакласс 'RecipeFilter'
         определяет свойства фильтрации для модели Recipe
         """
         model = Recipe
