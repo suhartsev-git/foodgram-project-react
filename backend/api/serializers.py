@@ -1,14 +1,14 @@
-# from django.db import transaction
+from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
-# from api.validators import (
-#     validate_cooking_time,
-#     validate_ingredients,
-#     validate_subscribed,
-#     validate_tags
-# )
+from api.validators import (
+    validate_cooking_time,
+    validate_ingredients,
+    validate_subscribed,
+    validate_tags
+)
 from users.models import User, Subscription
 from recipes.models import (
     IngredientRecipe,
@@ -209,13 +209,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "recipes",
         )
 
-    # def validate(self, data):
-    #     """
-    #     Проверяет валидность данных перед созданием или обновлением подписки.
-    #     """
-    #     request_user = self.context["request"].user
-    #     data = validate_subscribed(data, request_user)
-    #     return data
+    def validate(self, data):
+        """
+        Проверяет валидность данных перед созданием или обновлением подписки.
+        """
+        request_user = self.context["request"].user
+        data = validate_subscribed(data, request_user)
+        return data
 
     def get_is_subscribed(self, obj):
         """
@@ -249,16 +249,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     """
     author = UserSerializerCustom(read_only=True)
     cooking_time = serializers.IntegerField(
-        # validators=[validate_cooking_time]
+        validators=[validate_cooking_time]
     )
     ingredients = IngredientInRecipeSerializer(
         many=True,
-        # validators=[validate_ingredients]
+        validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
-        # validators=[validate_tags]
+        validators=[validate_tags]
     )
     image = Base64ImageField()
 
@@ -295,7 +295,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ]
         IngredientRecipe.objects.bulk_create(ingredient_list)
 
-    # @transaction.atomic
+    @transaction.atomic
     def create(self, validated_data):
         """
         Создает новый рецепт.
@@ -310,7 +310,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.create_ingredients(recipe, ingredients)
         return recipe
 
-    # @transaction.atomic
+    @transaction.atomic
     def update(self, instance, validated_data):
         """
         Обновляет существующий рецепт.
