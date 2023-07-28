@@ -330,9 +330,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Преобразует объект модели Recipe в представление для чтения.
         """
-        return RecipeReadSerializer(instance, context={
-            'request': self.context.get('request')
-        }).data
+        return RecipeReadSerializer(
+            instance, context=self.context
+        ).data
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
@@ -342,12 +342,13 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     тегах, ингредиентах, а также флаги is_favorited и is_in_shopping_cart,
     которые показывают, добавлен ли рецепт в избранное или корзину покупок.
     """
-    author = UserSerializerCustom(read_only=True)
+    author = UserSerializerCustom(read_only=True, many=True)
     tags = TagSerializer(read_only=True, many=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     ingredients = IngredientInRecipeSerializer(
+        source='ingredientrecipe',
         many=True,
     )
 
