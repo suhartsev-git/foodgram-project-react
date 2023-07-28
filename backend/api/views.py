@@ -75,12 +75,13 @@ class UserViewSetCustom(UserViewSet):
         """
         user = request.user
         queryset = Subscription.objects.filter(user=user)
+        pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
-            queryset,
+            pages,
             many=True,
             context={"request": request}
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -93,7 +94,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
-    permission_classes = (AuthorOrReadOnly,)
+    # permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsAuthenticated, AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 

@@ -84,11 +84,11 @@ class UserSerializerCustom(UserSerializer):
         подписан ли текущий пользователь на пользователя из контекста запроса.
         """
         user = self.context.get('request').user
-        if user.is_authenticated:
-            return Subscription.objects.filter(
-                user=user, author=obj.id
-            ).exists()
-        return False
+        if user.is_anonymous:
+            return False
+        return Subscription.objects.filter(
+            user=user, author=obj.id
+        ).exists()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -139,10 +139,16 @@ class BriefInfoSerializer(serializers.ModelSerializer):
         """
         model = Recipe
         fields = (
-            "id",
-            "name",
-            "image",
-            "cooking_time",
+            'cooking_time',
+            'image',
+            'name',
+            'id'
+        )
+        read_only_fields = (
+            'cooking_time',
+            'image',
+            'name',
+            'id'
         )
 
 
@@ -216,22 +222,25 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         Определяет, подписан ли текущий пользователь на автора рецептов.
         """
         return Subscription.objects.filter(
-            user=self.context["request"].user,
-            author=obj.author
+            user=obj.user, author=obj.author
         ).exists()
 
     def get_recipes(self, obj):
         """
         Получает список рецептов автора, связанных с объектом Subscription.
         """
-        recipes_limit = (
-            self.context["request"].query_params.get("recipes_limit")
-        )
-        queryset = (
-            obj.author.recipes.all()[:int(recipes_limit)] if recipes_limit
-            else obj.author.recipes.all()
-        )
+        request = self.context.get("request")
+        limit = request.GET.get("recipes_limit")
+        queryset = Recipe.objects.filter(author=obj.author)
+        if limit:
+            queryset = queryset[:int(limit)]
         return BriefInfoSerializer(queryset, many=True).data
+    
+    def get_recipes_count(self, obj):
+        """
+        Получает количество рецептов автора.
+        """
+        return Recipe.objects.filter(author=obj.author).count()
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -360,7 +369,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             "name",
             "image",
             "text",
-            "cooking_time",
+            "cooking_time"
         )
 
     def get_ingredients(self, obj):
@@ -376,9 +385,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         добавлен ли текущий рецепт в корзину покупок текущего пользователя.
         """
         request = self.context.get('request')
-        if request.user.is_authenticated:
-            return obj.shopping_list.filter(user=request.user).exists()
-        return False
+        if not request or request.user.is_anonymous:
+            return False
+        return obj.shopping_list.filter(user=request.user).exists()
 
     def get_is_favorited(self, obj):
         """
@@ -386,9 +395,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         добавлен ли текущий рецепт в избранное текущего пользователя.
         """
         request = self.context.get('request')
-        if request.user.is_authenticated:
-            return obj.favorites.filter(user=request.user).exists()
-        return False
+        if not request or request.user.is_anonymous:
+            return False
+        return obj.favorites.filter(user=request.user).exists()
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
