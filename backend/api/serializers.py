@@ -399,7 +399,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Преобразует объект модели Recipe в представление для чтения.
         """
         return RecipeReadSerializer(
-            instance, context=self.context
+            instance, context={
+                'request': self.context.get('request')
+            }
         ).data
 
 
