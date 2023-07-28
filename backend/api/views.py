@@ -44,6 +44,7 @@ class UserViewSetCustom(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
+    pagination_class = CustomPaginLimitOnPage
 
     @action(detail=True, methods=("POST", "DELETE",))
     def subscribe(self, request, id=None):

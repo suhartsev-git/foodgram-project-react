@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 
 class CustomPaginLimitOnPage(PageNumberPagination):
     """
-    Кастомной класс пагинации с ограничением количества элементов на странице.
+    Кастомный класс пагинации с ограничением количества элементов на странице.
     """
     page_size = settings.SIX_ELEMENTS_ON_PAGE
     page_size_query_param = "limit"
