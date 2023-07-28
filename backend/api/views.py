@@ -93,7 +93,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
-    # pagination_class = CustomPaginLimitOnPage
+    pagination_class = CustomPaginLimitOnPage
     permission_classes = (AuthorOrReadOnly | AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
