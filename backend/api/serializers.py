@@ -235,7 +235,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         if limit:
             queryset = queryset[:int(limit)]
         return BriefInfoSerializer(queryset, many=True).data
-    
+
     def get_recipes_count(self, obj):
         """
         Получает количество рецептов автора.
