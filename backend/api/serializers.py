@@ -184,12 +184,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     Сериализатор для модели Subscription.
     Включает информацию о подписке пользователя на автора рецептов.
     """
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
-    recipes_count = serializers.IntegerField(
-        source="author.recipes.count",
-        read_only=True
-    )
-    recipes = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    username = serializers.ReadOnlyField(source='author.username')
+    recipes = serializers.SerializerMethodField()
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
 
     class Meta:
         """
