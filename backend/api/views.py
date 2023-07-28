@@ -2,13 +2,14 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Sum
 from djoser.views import UserViewSet
-from django_filters.rest_framework import DjangoFilterBackend
+# from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import viewsets, status
 
-from api.filters import SearchIngredientFilter, RecipeFilter
+from api.filters import SearchIngredientFilter
+# , RecipeFilter
 from api.pagination import CustomPaginLimitOnPage
 from users.models import Subscription, User
 from api.permissions import (
@@ -95,8 +96,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
     permission_classes = (AuthorOrReadOnly | AdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = RecipeFilter
+    # filter_backends = (DjangoFilterBackend,)
+    # filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         """

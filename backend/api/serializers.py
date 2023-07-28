@@ -243,6 +243,72 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=obj.author).count()
 
 
+class RecipeReadSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для чтения модели Recipe.
+    Включает дополнительные поля, такие как информация о пользователе,
+    тегах, ингредиентах, а также флаги is_favorited и is_in_shopping_cart,
+    которые показывают, добавлен ли рецепт в избранное или корзину покупок.
+    """
+    author = UserSerializerCustom(read_only=True, many=True)
+    tags = TagSerializer(read_only=True, many=True)
+    image = Base64ImageField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+    ingredients = IngredientInRecipeSerializer(
+        source='ingredientrecipe',
+        many=True,
+    )
+
+    class Meta:
+        """
+        Класс Meta определяет метаданные для сериализатора
+        RecipeReadSerializer.
+        Здесь мы указываем модель с которой работает сериализатор
+        и поля которые будут сериализованы.
+        """
+        model = Recipe
+        fields = (
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time"
+        )
+
+    def get_ingredients(self, obj):
+        """
+        Получает список ингредиентов, связанных с текущим объектом Recipe.
+        """
+        ingredients_list = IngredientRecipe.objects.filter(recipe=obj)
+        return IngredientInRecipeSerializer(ingredients_list, many=True).data
+
+    def get_is_in_shopping_cart(self, obj):
+        """
+        Определяет,
+        добавлен ли текущий рецепт в корзину покупок текущего пользователя.
+        """
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return obj.shopping_list.filter(user=request.user).exists()
+
+    def get_is_favorited(self, obj):
+        """
+        Определяет,
+        добавлен ли текущий рецепт в избранное текущего пользователя.
+        """
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return obj.favorites.filter(user=request.user).exists()
+
+
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """
     Сериализатор для создания и обновления модели Recipe.
@@ -333,72 +399,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return RecipeReadSerializer(
             instance, context=self.context
         ).data
-
-
-class RecipeReadSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для чтения модели Recipe.
-    Включает дополнительные поля, такие как информация о пользователе,
-    тегах, ингредиентах, а также флаги is_favorited и is_in_shopping_cart,
-    которые показывают, добавлен ли рецепт в избранное или корзину покупок.
-    """
-    author = UserSerializerCustom(read_only=True, many=True)
-    tags = TagSerializer(read_only=True, many=True)
-    image = Base64ImageField()
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients = IngredientInRecipeSerializer(
-        source='ingredientrecipe',
-        many=True,
-    )
-
-    class Meta:
-        """
-        Класс Meta определяет метаданные для сериализатора
-        RecipeReadSerializer.
-        Здесь мы указываем модель с которой работает сериализатор
-        и поля которые будут сериализованы.
-        """
-        model = Recipe
-        fields = (
-            "id",
-            "tags",
-            "author",
-            "ingredients",
-            "is_favorited",
-            "is_in_shopping_cart",
-            "name",
-            "image",
-            "text",
-            "cooking_time"
-        )
-
-    def get_ingredients(self, obj):
-        """
-        Получает список ингредиентов, связанных с текущим объектом Recipe.
-        """
-        ingredients_list = IngredientRecipe.objects.filter(recipe=obj)
-        return IngredientInRecipeSerializer(ingredients_list, many=True).data
-
-    def get_is_in_shopping_cart(self, obj):
-        """
-        Определяет,
-        добавлен ли текущий рецепт в корзину покупок текущего пользователя.
-        """
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return obj.shopping_list.filter(user=request.user).exists()
-
-    def get_is_favorited(self, obj):
-        """
-        Определяет,
-        добавлен ли текущий рецепт в избранное текущего пользователя.
-        """
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return obj.favorites.filter(user=request.user).exists()
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
