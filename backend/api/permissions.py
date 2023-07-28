@@ -23,10 +23,7 @@ class AuthorOrReadOnly(permissions.BasePermission):
         (разрешено: безопасные методы или
         права предастовляются если пользователь является автором )
         """
-        return (
-            request.method in permissions.SAFE_METHODS
-            or obj.author == request.user
-        )
+        return obj.author == request.user
 
 
 class AdminOrReadOnly(permissions.BasePermission):

@@ -12,7 +12,7 @@ from api.filters import SearchIngredientFilter, RecipeFilter
 from api.pagination import CustomPaginLimitOnPage
 from users.models import Subscription, User
 from api.permissions import (
-    # AuthorOrReadOnly,
+    AuthorOrReadOnly,
     AdminOrReadOnly
 )
 from api.serializers import (
@@ -94,8 +94,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
-    # permission_classes = (AuthorOrReadOnly,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AuthorOrReadOnly | AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
