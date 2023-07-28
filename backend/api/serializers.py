@@ -330,9 +330,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Преобразует объект модели Recipe в представление для чтения.
         """
-        return RecipeReadSerializer(
-            instance, context=self.context
-        ).data
+        return RecipeReadSerializer(instance, context={
+            'request': self.context.get('request')
+        }).data
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
@@ -369,7 +369,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             "name",
             "image",
             "text",
-            "cooking_time",
+            "cooking_time"
         )
 
     def get_ingredients(self, obj):
