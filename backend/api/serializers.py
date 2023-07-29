@@ -203,7 +203,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "last_name",
             "is_subscribed",
             "recipes",
-            'recipes_count'
+            'recipes_count',
         )
 
     def validate(self, data):
@@ -219,18 +219,21 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         Определяет, подписан ли текущий пользователь на автора рецептов.
         """
         return Subscription.objects.filter(
-            user=obj.user, author=obj.author
+            user=self.context["request"].user,
+            author=obj.author
         ).exists()
 
     def get_recipes(self, obj):
         """
         Получает список рецептов автора, связанных с объектом Subscription.
         """
-        request = self.context.get("request")
-        limit = request.GET.get("recipes_limit")
-        queryset = Recipe.objects.filter(author=obj.author)
-        if limit:
-            queryset = queryset[:int(limit)]
+        recipes_limit = (
+            self.context["request"].query_params.get("recipes_limit")
+        )
+        queryset = (
+            obj.author.recipes.all()[:int(recipes_limit)] if recipes_limit
+            else obj.author.recipes.all()
+        )
         return BriefInfoSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
