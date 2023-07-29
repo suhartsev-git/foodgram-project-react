@@ -119,6 +119,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         Здесь мы указываем модель с которой работает сериализатор
         и поля которые будут сериализованы.
         """
+        model = Ingredient
         fields = (
             'measurement_unit',
             'name',
@@ -177,10 +178,10 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         """
         model = IngredientRecipe
         fields = (
-            "id",
-            "name",
-            "measurement_unit",
-            "amount",
+            'measurement_unit',
+            'amount',
+            'name',
+            'id'
         )
 
 
@@ -213,7 +214,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_subscribed",
-            "recipes",
+            "recipes"
         )
 
     def validate(self, data):
@@ -351,7 +352,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "image",
             "name",
             "text",
-            "cooking_time",
+            "cooking_time"
         )
 
     def create_ingredients(self, recipe, ingredients):
