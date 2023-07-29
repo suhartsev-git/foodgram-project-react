@@ -45,6 +45,7 @@ class UserViewSetCustom(UserViewSet):
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
     pagination_class = CustomPaginLimitOnPage
+    lookup_field = 'id'
 
     @action(detail=True, methods=("POST", "DELETE",))
     def subscribe(self, request, id=None):
@@ -60,13 +61,14 @@ class UserViewSetCustom(UserViewSet):
                 subscribe, context={"request": request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = get_object_or_404(
-            Subscription,
-            user=user,
-            author=author
-        )
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if request.method == 'DELETE':
+            subscription = get_object_or_404(
+                Subscription,
+                user=user,
+                author=author
+            )
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=("GET",))
     def subscriptions(self, request):
