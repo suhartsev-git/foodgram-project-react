@@ -132,15 +132,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         в текстовый файл для скачивания.
         """
         ingredients = IngredientRecipe.objects.filter(
-            recipe__shopping_list__user=request.user
+            recipe__carts__user=request.user
         ).order_by("ingredient__name").values(
             "ingredient__name",
             "ingredient__measurement_unit"
         ).annotate(amount=Sum('amount'))
-        shopping_list_content = self.create_list_of_products(ingredients)
+        carts_content = self.create_list_of_products(ingredients)
         file_name = "list_of_products.txt"
         response = HttpResponse(
-            shopping_list_content,
+            carts_content,
             content_type='text/plain'
         )
         response["Content-Disposition"] = f'attachment; filename="{file_name}"'
