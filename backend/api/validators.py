@@ -9,10 +9,10 @@ def validate_ingredients(value):
     """
     Валидатор для поля "ingredients" в рецепте.
     """
-    if not value or value < settings.MIN_VALUE_IS_ONE:
+    if value <= settings.MIN_VALUE_IS_NULL:
         raise ValidationError(
             f"Количество ингредиентов не может быть пустым, "
-            f"или быть меньше чем {settings.MIN_VALUE_IS_ONE}"
+            f"или быть равно {settings.MIN_VALUE_IS_NULL}"
         )
     return value
 
