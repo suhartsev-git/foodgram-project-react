@@ -3,12 +3,12 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 from users.models import User
-# from api.validators import (
-#     validate_cooking_time,
-#     validate_ingredients,
-#     validate_amount,
-#     validate_tags
-# )
+from api.validators import (
+    validate_cooking_time,
+    validate_ingredients,
+    validate_amount,
+    validate_tags
+)
 
 
 class Ingredient(models.Model):
@@ -110,13 +110,13 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        # validators=[validate_tags],
+        validators=[validate_tags],
         verbose_name="Теги"
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         through="IngredientRecipe",
-        # validators=[validate_ingredients],
+        validators=[validate_ingredients],
         verbose_name="Ингридиенты",
     )
     text = models.TextField(verbose_name="Описание")
@@ -125,7 +125,7 @@ class Recipe(models.Model):
         verbose_name="Изображение"
     )
     cooking_time = models.PositiveSmallIntegerField(
-        # validators=[validate_cooking_time],
+        validators=[validate_cooking_time],
         verbose_name="Время готовки"
     )
     pub_date = models.DateTimeField(
@@ -169,7 +169,7 @@ class IngredientRecipe(models.Model):
         verbose_name='Рецепт'
     )
     amount = models.PositiveSmallIntegerField(
-        # validators=[validate_amount],
+        validators=[validate_amount],
         verbose_name='Количество ингредиента'
     )
 
