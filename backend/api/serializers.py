@@ -328,7 +328,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         validators=[validate_tags]
     )
-    image = Base64ImageField()
+    image = Base64ImageField(max_length=None)
 
     class Meta:
         """
@@ -398,11 +398,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Преобразует объект модели Recipe в представление для чтения.
         """
-        return RecipeReadSerializer(
-            instance, context={
-                'request': self.context.get('request')
-            }
-        ).data
+        return RecipeReadSerializer(instance, context=self.context).data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
