@@ -44,8 +44,6 @@ class UserViewSetCustom(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
-    pagination_class = CustomPaginLimitOnPage
-    lookup_field = 'id'
 
     @action(detail=True, methods=("POST", "DELETE",))
     def subscribe(self, request, id=None):
@@ -61,14 +59,13 @@ class UserViewSetCustom(UserViewSet):
                 subscribe, context={"request": request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(
-                Subscription,
-                user=user,
-                author=author
-            )
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription = get_object_or_404(
+            Subscription,
+            user=user,
+            author=author
+        )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=("GET",))
     def subscriptions(self, request):
@@ -96,7 +93,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
-    permission_classes = (AuthorOrReadOnly | AdminOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
