@@ -119,8 +119,11 @@ class IngredientSerializer(serializers.ModelSerializer):
         Здесь мы указываем модель с которой работает сериализатор
         и поля которые будут сериализованы.
         """
-        model = Ingredient
-        fields = "__all__"
+        fields = (
+            'measurement_unit',
+            'name',
+            'id'
+        )
 
 
 class BriefInfoSerializer(serializers.ModelSerializer):
@@ -161,7 +164,9 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
-    id = serializers.ReadOnlyField(source="ingredient.id")
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
 
     class Meta:
         """
