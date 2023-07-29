@@ -38,7 +38,6 @@ class UserSerializerCustom(UserSerializer):
         model = User
         fields = (
             "email",
-            "id",
             "username",
             "first_name",
             "last_name",
@@ -252,7 +251,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     тегах, ингредиентах, а также флаги is_favorited и is_in_shopping_cart,
     которые показывают, добавлен ли рецепт в избранное или корзину покупок.
     """
-    author = UserSerializerCustom(read_only=True, many=True)
+    author = UserSerializerCustom(read_only=True, many=False)
     tags = TagSerializer(read_only=True, many=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
@@ -296,8 +295,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         добавлен ли текущий рецепт в корзину покупок текущего пользователя.
         """
         request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
+        # if not request or request.user.is_anonymous:
+        #     return False
         return obj.shopping_list.filter(user=request.user).exists()
 
     def get_is_favorited(self, obj):
@@ -306,8 +305,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         добавлен ли текущий рецепт в избранное текущего пользователя.
         """
         request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
+        # if not request or request.user.is_anonymous:
+        #     return False
         return obj.favorites.filter(user=request.user).exists()
 
 
@@ -414,7 +413,15 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         и поля которые будут сериализованы.
         """
         model = ShoppingCart
-        fields = "__all__"
+        fields = ('user', 'recipe')
+
+    def validate(self, data):
+        user = data['user']
+        if user.shopping_list.filter(recipe=data['recipe']).exists():
+            raise serializers.ValidationError(
+                'Рецепт уже в корзине'
+            )
+        return data
 
     def to_representation(self, instance):
         """
