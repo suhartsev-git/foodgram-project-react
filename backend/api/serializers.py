@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from api.validators import (
     validate_cooking_time,
-    # validate_ingredients,
+    validate_ingredients,
     validate_subscribed,
     validate_tags
 )
@@ -327,7 +327,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = IngredientInRecipeSerializer(
         many=True,
-        # validators=[validate_ingredients]
+        validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -424,7 +424,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         user = data['user']
-        if user.shopping_list.filter(recipe=data['recipe']).exists():
+        if user.carts.filter(recipe=data['recipe']).exists():
             raise serializers.ValidationError(
                 'Рецепт уже в корзине'
             )
