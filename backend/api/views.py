@@ -44,6 +44,8 @@ class UserViewSetCustom(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializerCustom
     permission_classes = (IsAuthenticated,)
+    pagination_class = CustomPaginLimitOnPage
+    lookup_field = 'id'
 
     @action(detail=True, methods=("POST", "DELETE",))
     def subscribe(self, request, id=None):
@@ -93,7 +95,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
     pagination_class = CustomPaginLimitOnPage
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly | AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
