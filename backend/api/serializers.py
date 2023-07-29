@@ -20,46 +20,6 @@ from recipes.models import (
 )
 
 
-class UserSerializerCustom(UserSerializer):
-    """
-    Пользовательский сериализатор для пользователя.
-    Добавляет поле is_subscribed, которое показывает,
-    подписан ли текущий пользователь на пользователя из контекста запроса.
-    """
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta:
-        """
-        Класс Meta определяет метаданные для сериализатора
-        UserSerializerCustom.
-        Здесь мы указываем модель с которой работает сериализатор
-        и поля которые будут сериализованы.
-        """
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed"
-        )
-
-    lookup_field = 'username'
-
-    def get_is_subscribed(self, obj):
-        """
-        Определяет,
-        подписан ли текущий пользователь на пользователя из контекста запроса.
-        """
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            user=user, author=obj.id
-        ).exists()
-
-
 class UserCreateSerializerCustom(UserCreateSerializer):
     """
     Кастомный сериализатор для создания пользователя.
@@ -91,6 +51,46 @@ class UserCreateSerializerCustom(UserCreateSerializer):
         }
 
 
+class UserSerializerCustom(UserSerializer):
+    """
+    Пользовательский сериализатор для пользователя.
+    Добавляет поле is_subscribed, которое показывает,
+    подписан ли текущий пользователь на пользователя из контекста запроса.
+    """
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        """
+        Класс Meta определяет метаданные для сериализатора
+        UserSerializerCustom.
+        Здесь мы указываем модель с которой работает сериализатор
+        и поля которые будут сериализованы.
+        """
+        model = User
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "is_subscribed"
+        )
+
+    lookup_field = 'username'
+
+    def get_is_subscribed(self, obj):
+        """
+        Определяет,
+        подписан ли текущий пользователь на пользователя из контекста запроса.
+        """
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return Subscription.objects.filter(
+                user=user, author=obj.id
+            ).exists()
+        return False
+
+
 class TagSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Tag.
@@ -120,11 +120,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         и поля которые будут сериализованы.
         """
         model = Ingredient
-        fields = (
-            'measurement_unit',
-            'name',
-            'id'
-        )
+        fields = "__all__"
 
 
 class BriefInfoSerializer(serializers.ModelSerializer):
@@ -143,16 +139,10 @@ class BriefInfoSerializer(serializers.ModelSerializer):
         """
         model = Recipe
         fields = (
-            'cooking_time',
-            'image',
-            'name',
-            'id'
-        )
-        read_only_fields = (
-            'cooking_time',
-            'image',
-            'name',
-            'id'
+            "id",
+            "name",
+            "image",
+            "cooking_time",
         )
 
 
