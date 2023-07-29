@@ -38,6 +38,7 @@ class UserSerializerCustom(UserSerializer):
         model = User
         fields = (
             "email",
+            "id",
             "username",
             "first_name",
             "last_name",
@@ -295,8 +296,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         добавлен ли текущий рецепт в корзину покупок текущего пользователя.
         """
         request = self.context.get('request')
-        # if not request or request.user.is_anonymous:
-        #     return False
+        if not request or request.user.is_anonymous:
+            return False
         return obj.shopping_list.filter(user=request.user).exists()
 
     def get_is_favorited(self, obj):
@@ -305,8 +306,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         добавлен ли текущий рецепт в избранное текущего пользователя.
         """
         request = self.context.get('request')
-        # if not request or request.user.is_anonymous:
-        #     return False
+        if not request or request.user.is_anonymous:
+            return False
         return obj.favorites.filter(user=request.user).exists()
 
 
