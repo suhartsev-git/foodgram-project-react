@@ -294,12 +294,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 Ingredient,
                 id=ingredient.get('id')
             )
-            amount = ingredient.get('amount')
             ingredient_list.append(
                 IngredientRecipe(
-                    recipe=recipe,
                     ingredient=current_ingredient,
-                    amount=amount
+                    amount=ingredient.pop("amount"),
+                    recipe=recipe,
                 )
             )
         IngredientRecipe.objects.bulk_create(ingredient_list)
