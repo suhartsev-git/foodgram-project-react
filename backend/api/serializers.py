@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -320,13 +319,32 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.tags.clear()
         tags = validated_data.pop('tags')
         instance.tags.set(tags)
-        instance.ingredients.clear()
-        ingredients = validated_data.pop('ingredients')
-        self.create_ingredients(instance, ingredients)
-        return super().update(
-            instance,
-            validated_data
-        )
+        updated_ingredients = validated_data.pop('ingredients')
+        existing_ingredients = instance.ingredients.all()
+        for updated_ingredient_data in updated_ingredients:
+            ingredient_id = updated_ingredient_data['id']
+            amount = updated_ingredient_data['amount']
+            try:
+                ingredient = existing_ingredients.get(id=ingredient_id)
+                ingredient.amount = amount
+                ingredient.save()
+            except IngredientRecipe.DoesNotExist:
+                IngredientRecipe.objects.create(
+                    ingredient=ingredient_id,
+                    amount=amount,
+                    recipe=instance,
+                )
+        return super().update(instance, validated_data)
+        # instance.tags.clear()
+        # tags = validated_data.pop('tags')
+        # instance.tags.set(tags)
+        # instance.ingredients.clear()
+        # ingredients = validated_data.pop('ingredients')
+        # self.create_ingredients(instance, ingredients)
+        # return super().update(
+        #     instance,
+        #     validated_data
+        # )
 
     def to_representation(self, instance):
         """
