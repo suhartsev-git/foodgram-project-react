@@ -255,7 +255,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = IngredientInRecipeSerializer(
         many=True,
-        source='ingredientrecipe',
         validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
