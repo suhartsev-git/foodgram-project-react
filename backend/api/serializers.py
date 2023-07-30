@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -254,6 +255,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = IngredientInRecipeSerializer(
         many=True,
+        source='ingredientrecipe',
         validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
@@ -286,30 +288,52 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        ingredient_list = [
-            IngredientRecipe(
-                ingredient=ingredient_data.pop("id"),
-                amount=ingredient_data.pop("amount"),
-                recipe=recipe,
+        ingredient_list = []
+        for ingredient in ingredients:
+            current_ingredient = get_object_or_404(
+                Ingredient,
+                id=ingredient.get('id')
             )
-            for ingredient_data in ingredients
-        ]
+            amount = ingredient.get('amount')
+            ingredient_list.append(
+                IngredientRecipe(
+                    recipe=recipe,
+                    ingredient=current_ingredient,
+                    amount=amount
+                )
+            )
         IngredientRecipe.objects.bulk_create(ingredient_list)
+        # ingredient_list = [
+        #     IngredientRecipe(
+        #         ingredient=ingredient_data.pop("id"),
+        #         amount=ingredient_data.pop("amount"),
+        #         recipe=recipe,
+        #     )
+        #     for ingredient_data in ingredients
+        # ]
+        # IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
     def create(self, validated_data):
         """
         Создает новый рецепт.
         """
-        ingredients = validated_data.pop("ingredients")
-        tags_data = validated_data.pop("tags")
-        recipe = Recipe.objects.create(
-            author=self.context["request"].user,
-            **validated_data
-        )
-        recipe.tags.set(tags_data)
-        self.create_ingredients(recipe, ingredients)
+        request = self.context.get('request')
+        ingredients = validated_data.pop('ingredientrecipe')
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.create(author=request.user, **validated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients(ingredients, recipe)
         return recipe
+        # ingredients = validated_data.pop("ingredients")
+        # tags_data = validated_data.pop("tags")
+        # recipe = Recipe.objects.create(
+        #     author=self.context["request"].user,
+        #     **validated_data
+        # )
+        # recipe.tags.set(tags_data)
+        # self.create_ingredients(recipe, ingredients)
+        # return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
