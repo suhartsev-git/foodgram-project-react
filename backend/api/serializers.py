@@ -284,7 +284,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def create_ingredients(self, ingredients, recipe):
+    def create_ingredients(self, recipe, ingredients):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
@@ -318,22 +318,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает новый рецепт.
         """
-        request = self.context.get('request')
-        ingredients = validated_data.pop('ingredientrecipe')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
-        recipe.tags.set(tags)
-        self.create_ingredients(ingredients, recipe)
+        ingredients = validated_data.pop("ingredients")
+        tags_data = validated_data.pop("tags")
+        recipe = Recipe.objects.create(
+            author=self.context["request"].user,
+            **validated_data
+        )
+        recipe.tags.set(tags_data)
+        self.create_ingredients(recipe, ingredients)
         return recipe
-        # ingredients = validated_data.pop("ingredients")
-        # tags_data = validated_data.pop("tags")
-        # recipe = Recipe.objects.create(
-        #     author=self.context["request"].user,
-        #     **validated_data
-        # )
-        # recipe.tags.set(tags_data)
-        # self.create_ingredients(recipe, ingredients)
-        # return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
