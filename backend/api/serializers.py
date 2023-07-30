@@ -287,7 +287,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         ingredient_list = [
             IngredientRecipe(
-                ingredient=ingredient_data.pop("ingredient_id"),
+                ingredient=ingredient_data.pop("id"),
                 amount=ingredient_data.pop("amount"),
                 recipe=recipe,
             )
