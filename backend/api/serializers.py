@@ -263,16 +263,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     """
     author = UserSerializerCustom(read_only=True)
     cooking_time = serializers.IntegerField(
-        validators=[validate_cooking_time()]
+        validators=[validate_cooking_time]
     )
     ingredients = IngredientAddSerializer(
         many=True,
-        validators=[validate_ingredients()]
+        validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
-        validators=[validate_tags()]
+        validators=[validate_tags]
     )
     image = Base64ImageField()
 
