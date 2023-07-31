@@ -28,13 +28,20 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "author",
+        "get_favorites",
     )
+    readonly_fields = ("get_favorites",)
     search_fields = (
         "name",
         "author__username",
         "tags__name",
     )
-    list_filter = ("name", "author__username", "tags__name")
+    list_filter = (
+        "name",
+        "author__username",
+        "tags__name",
+    )
+    readonly_fields = ("get_favorites",)
     inlines = (IngredientInline,)
     empty_value_display = "-пусто-"
 
@@ -45,14 +52,14 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorites.count()
     get_favorites.short_description = "Избранное"
 
-    def get_ingredients(self, obj):
-        """
-        Возвращает строку с перечислением ингредиентов рецепта.
-        """
-        return ', '.join([
-            ingredients.name for ingredients
-            in obj.ingredients.all()])
-    get_ingredients.short_description = "Ингридиенты"
+    # def get_ingredients(self, obj):
+    #     """
+    #     Возвращает строку с перечислением ингредиентов рецепта.
+    #     """
+    #     return ', '.join([
+    #         ingredients.name for ingredients
+    #         in obj.ingredients.all()])
+    # get_ingredients.short_description = "Ингридиенты"
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -90,9 +97,10 @@ class FavoriteAdmin(admin.ModelAdmin):
     Используется для настройки отображения и фильтрации избранных рецептов
     в административной панели.
     """
-    list_display = ('id', 'user', 'recipe',)
+    list_display = ('user', 'recipe',)
     search_fields = ('recipe__name', 'user__username',)
     list_filter = ('recipe__tags',)
+    empty_value_display = "-пусто-"
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):
@@ -101,11 +109,13 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     Используется для настройки отображения и фильтрации списка покупок
     в административной панели.
     """
-    list_display = ('id', 'user', 'recipe',)
+    list_display = ('user', 'recipe',)
     search_fields = (
-        'recipe__name', 'recipe__author__username',
+        'recipe__name',
+        'recipe__author__username',
     )
     list_filter = ('recipe__tags',)
+    empty_value_display = "-пусто-"
 
 
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
