@@ -147,16 +147,16 @@ class BriefInfoSerializer(serializers.ModelSerializer):
         )
 
 
-class IngredientPostSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления ингредиентов.
-    Используется при работе с рецептами.
+class IngredientAddSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для добавления ингредиентов.
     """
     id = serializers.IntegerField()
     amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientRecipe
-        fields = ('id', 'amount')
+        fields = ('id', 'amount',)
 
 
 class IngredientInRecipeSerializer(serializers.ModelSerializer):
@@ -262,8 +262,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(
         validators=[validate_cooking_time]
     )
-    ingredients = IngredientPostSerializer(
-        many=True, source='ingredientrecipe'
+    ingredients = IngredientAddSerializer(
+        many=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -295,20 +295,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        ingredient_list = []
-        for ingredient in ingredients:
-            current_ingredient = get_object_or_404(
-                Ingredient,
-                id=ingredient.get('id')
+        ingredient_list = [
+            IngredientRecipe(
+                recipe=recipe,
+                ingredient=get_object_or_404(
+                    Ingredient, id=ingredient.get('id')
+                ),
+                amount=ingredient.get('amount')
             )
-            amount = ingredient.get('amount')
-            ingredient_list.append(
-                IngredientRecipe(
-                    recipe=recipe,
-                    ingredient=current_ingredient,
-                    amount=amount
-                )
-            )
+            for ingredient in ingredients
+        ]
         IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
@@ -317,7 +313,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Создает новый рецепт.
         """
         request = self.context.get('request')
-        ingredients = validated_data.pop('ingredientrecipe')
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(author=request.user, **validated_data)
         recipe.tags.set(tags)
@@ -329,7 +325,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Обновляет существующий рецепт.
         """
-        ingredients = validated_data.pop('ingredientrecipe')
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance.tags.clear()
         instance.tags.set(tags)
