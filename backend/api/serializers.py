@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from api.validators import (
     validate_cooking_time,
-    # validate_ingredients,
+    validate_ingredients,
     validate_subscribed,
     validate_tags
 )
@@ -155,7 +155,9 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
-    id = serializers.ReadOnlyField(source='ingredient.id')
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
 
     class Meta:
         """
@@ -241,14 +243,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=obj.author).count()
 
 
-class AddIngredientSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-
-    class Meta:
-        model = IngredientRecipe
-        fields = ('id', 'amount')
-
-
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """
     Сериализатор для создания и обновления модели Recipe.
@@ -257,12 +251,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(
         validators=[validate_cooking_time]
     )
-    ingredients = AddIngredientSerializer(many=True)
-    # ingredients = IngredientInRecipeSerializer(
-    #     source='ingredient_amounts',
-    #     many=True,
-    #     # validators=[validate_ingredients]
-    # )
+    ingredients = IngredientInRecipeSerializer(
+        many=True,
+        validators=[validate_ingredients]
+    )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
@@ -289,28 +281,33 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def create_ingredients(self, ingredients, recipe):
+    def create_ingredients(self, recipe, ingredients):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        new_ingredients = [IngredientRecipe(
-            recipe=recipe,
-            ingredient=ingredient['id'],
-            amount=ingredient['amount'],
-        ) for ingredient in ingredients]
-        IngredientRecipe.objects.bulk_create(new_ingredients)
+        ingredient_list = [
+            IngredientRecipe(
+                ingredient=ingredient_data.pop("id"),
+                amount=ingredient_data.pop("amount"),
+                recipe=recipe,
+            )
+            for ingredient_data in ingredients
+        ]
+        IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
     def create(self, validated_data):
         """
         Создает новый рецепт.
         """
-        author = self.context.get('request').user
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(author=author, **validated_data)
-        recipe.tags.set(tags)
-        self.create_ingredients(ingredients, recipe)
+        ingredients = validated_data.pop("ingredients")
+        tags_data = validated_data.pop("tags")
+        recipe = Recipe.objects.create(
+            author=self.context["request"].user,
+            **validated_data
+        )
+        recipe.tags.set(tags_data)
+        self.create_ingredients(recipe, ingredients)
         return recipe
 
     @transaction.atomic
@@ -319,11 +316,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
-        recipe.tags.clear()
-        IngredientRecipe.objects.filter(recipe=recipe).delete()
         recipe.tags.set(tags)
-        self.create_ingredients(validated_data.pop('ingredients'), recipe)
-        return super().update(recipe, validated_data)
+        ingredients = validated_data.pop('ingredients')
+        self.create_ingredients(recipe, ingredients)
+        recipe.save()
+        return recipe
+        # instance.tags.clear()
+        # tags = validated_data.pop('tags')
+        # instance.tags.set(tags)
+        # instance.ingredients.clear()
+        # ingredients = validated_data.pop('ingredients')
+        # self.create_ingredients(instance, ingredients)
+        # return super().update(
+        #     instance,
+        #     validated_data
+        # )
 
     def to_representation(self, instance):
         """
@@ -346,7 +353,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients = IngredientInRecipeSerializer(many=True,)
+    ingredients = IngredientInRecipeSerializer(
+        source='ingredientrecipe',
+        many=True,
+    )
 
     class Meta:
         """
