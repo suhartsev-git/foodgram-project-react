@@ -315,16 +315,31 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Обновляет существующий рецепт.
         """
-        recipe.tags.clear()
-        tags = validated_data.pop('tags')
-        recipe.tags.set(tags)
-        recipe.ingredients.clear()
-        ingredients = validated_data.pop('ingredients')
-        self.create_ingredients(recipe, ingredients)
-        return super().update(
-            recipe,
-            validated_data
+        recipe.name = validated_data.get("name", recipe.name)
+        recipe.text = validated_data.get("text", recipe.text)
+        recipe.cooking_time = validated_data.get(
+            "cooking_time", recipe.cooking_time
         )
+        recipe.image = validated_data.get("image", recipe.image)
+        tags_data = validated_data.get("tags")
+        if tags_data is not None:
+            recipe.tags.set(tags_data)
+        recipe.ingredients.clear()
+        ingredients = validated_data.get("ingredients")
+        if ingredients:
+            self.create_ingredients(recipe, ingredients)
+        recipe.save()
+        return recipe
+        # recipe.tags.clear()
+        # tags = validated_data.pop('tags')
+        # recipe.tags.set(tags)
+        # recipe.ingredients.clear()
+        # ingredients = validated_data.pop('ingredients')
+        # self.create_ingredients(recipe, ingredients)
+        # return super().update(
+        #     recipe,
+        #     validated_data
+        # )
 
     def to_representation(self, instance):
         """
