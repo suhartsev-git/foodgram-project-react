@@ -161,7 +161,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     # id = serializers.PrimaryKeyRelatedField(
     #     queryset=Ingredient.objects.all()
     # )
-    id = serializers.IntegerField()
+    id = serializers.ReadOnlyField(source='ingredient.id')
 
     class Meta:
         """
@@ -286,18 +286,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
+        if not value:
             raise ValidationError({
                 'ingredients': 'Совсем без ингредиента нельзя!'
             })
         ingredients_list = []
-        for item in ingredients:
+        for item in value:
             ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Ингредиенты не должны повторяться!'
-                })
             if int(item['amount']) < settings.MIN_VALUE_IS_ONE:
                 raise ValidationError({
                     'amount': 'Ингредиента должно быть не менее одного'
@@ -342,7 +337,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         instance.tags.clear()
         instance.tags.set(tags)
-        # instance.ingredients.clear()
+        instance.ingredients.clear()
         self.create_ingredients(
             recipe=instance,
             ingredients=ingredients
