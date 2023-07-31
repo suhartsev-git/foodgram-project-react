@@ -151,10 +151,10 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     Сериализатор для модели IngredientRecipe,
     включая данные из связанной модели Ingredient.
     """
-    # name = serializers.ReadOnlyField(source='ingredient.name')
-    # measurement_unit = serializers.ReadOnlyField(
-    #     source='ingredient.measurement_unit'
-    # )
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
     # id = serializers.PrimaryKeyRelatedField(
     #     queryset=Ingredient.objects.all()
     # )
@@ -321,7 +321,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.tags.set(tags)
         instance.ingredients.clear()
         self.create_ingredients(
-            recipe=instance, ingredients=ingredients)
+            recipe=instance,
+            ingredients=ingredients
+        )
         instance.save()
         return instance
         # instance.tags.clear()
