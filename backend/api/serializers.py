@@ -297,27 +297,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, data):
         ingredients = self.initial_data.get("ingredients")
-        ingredients_ids = [
+        ingredients_id = [
             ingredient["id"] for ingredient in ingredients
         ]
-        if len(ingredients) != len(set(ingredients_ids)):
+        if len(ingredients) != len(set(ingredients_id)):
             raise serializers.ValidationError(
-                "Вы не можете добавить один ингредиент дважды"
+                "Вы не можете добавить два одинаковых ингредиента"
             )
         return data
-
-    # def validate_ingredients(self, value):
-    #     ingredients_list = []
-    #     for item in value:
-    #         ingredient = get_object_or_404(
-    #             Ingredient, id=item["id"]
-    #         )
-    #         if ingredient in ingredients_list:
-    #             raise serializers.ValidationError(
-    #                 "Ингридиенты не должны повторяться."
-    #             )
-    #         ingredients_list.append(ingredient)
-    #     return value
 
     def create_ingredients(self, ingredients, recipe):
         """
