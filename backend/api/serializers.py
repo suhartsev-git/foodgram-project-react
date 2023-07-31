@@ -315,14 +315,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает новый рецепт.
         """
-        ingredients = validated_data.pop("ingredients")
-        tags_data = validated_data.pop("tags")
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(
             author=self.context["request"].user,
             **validated_data
         )
-        recipe.tags.set(tags_data)
-        self.create_ingredients(recipe, ingredients)
+        recipe.tags.set(tags)
+        self.create_ingredients(ingredients, recipe)
         return recipe
 
     @transaction.atomic
