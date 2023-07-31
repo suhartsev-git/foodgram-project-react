@@ -9,6 +9,11 @@ def validate_ingredients(value):
     """
     Валидатор для поля "ingredients" в рецепте.
     """
+    ingredient_ids = {ingredient.get('id') for ingredient in value}
+    if len(ingredient_ids) != len(value):
+        raise ValidationError(
+            "Нельзя добавить два одинаковых ингредиента."
+        )
     if not value or value == 0:
         raise ValidationError(
             f"Количество ингредиентов не может быть пустым, "

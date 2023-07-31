@@ -103,6 +103,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe',)
     search_fields = (
         "recipe__name",
+        "user__username",
         "recipe__author__username",
     )
     list_filter = ("recipe__tags",)
