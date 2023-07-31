@@ -295,6 +295,19 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
+    def validate_ingredients(self, value):
+        ingredients_list = []
+        for item in value:
+            ingredient = get_object_or_404(
+                Ingredient, id=item["id"]
+            )
+            if ingredient in ingredients_list:
+                raise serializers.ValidationError({
+                    "ingredients": "Ингридиенты не должны повторяться."
+                })
+            ingredients_list.append(ingredient)
+        return value
+
     def create_ingredients(self, ingredients, recipe):
         """
         Создает связанные объекты IngredientRecipe для рецепта.

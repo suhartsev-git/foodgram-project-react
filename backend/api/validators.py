@@ -1,10 +1,8 @@
-from django.shortcuts import get_object_or_404
 from django.conf import settings
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 
 from users.models import Subscription
-from recipes.models import Ingredient
 
 
 def validate_ingredients(value):
@@ -16,16 +14,6 @@ def validate_ingredients(value):
             f"Количество ингредиентов не может быть пустым, "
             f"или быть равно {settings.MIN_VALUE_IS_NULL}"
         )
-    ingredients_list = []
-    for item in value:
-        ingredient = get_object_or_404(
-            Ingredient, id=item["id"]
-        )
-        if ingredient in ingredients_list:
-            raise ValidationError({
-                "ingredients": "Ингридиенты не должны повторяться."
-            })
-        ingredients_list.append(ingredient)
     return value
 
 
