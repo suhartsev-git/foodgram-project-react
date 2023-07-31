@@ -338,34 +338,30 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get(
-            'cooking_time', instance.cooking_time
-        )
-        instance.image = validated_data.get('image', instance.image)
+        ingredients_data = validated_data.pop('ingredients')
+        instance = super().update(instance, validated_data)
         instance.tags.set(tags)
-        existing_ingredient_ids = list(
-            instance.ingredients.all().values_list('id', flat=True)
+        existing_ingredient_ids = set(
+            instance.ingredients.values_list('ingredient__id', flat=True)
         )
-        new_ingredient_ids = [ingredient['id'] for ingredient in ingredients]
-        instance.ingredients.remove(*[
-            ingredient_id for ingredient_id in existing_ingredient_ids
-            if ingredient_id not in new_ingredient_ids
-        ])
-        for ingredient_data in ingredients:
+        for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data['id']
             amount = ingredient_data['amount']
             if ingredient_id in existing_ingredient_ids:
-                instance.ingredients.through.objects.filter(
-                    recipe=instance, ingredient_id=ingredient_id
-                ).update(amount=amount)
-            else:
-                ingredient = Ingredient.objects.get(id=ingredient_id)
-                instance.ingredients.add(
-                    ingredient, through_defaults={'amount': amount}
+                instance.ingredients.filter(
+                    ingredient__id=ingredient_id
+                ).update(
+                    amount=amount
                 )
+            else:
+                ingredient = get_object_or_404(Ingredient, id=ingredient_id)
+                instance.ingredients.create(
+                    ingredient=ingredient,
+                    amount=amount
+                )
+        instance.ingredients.exclude(
+            ingredient__id__in=existing_ingredient_ids
+        ).delete()
         instance.save()
         return instance
         # tags = validated_data.pop('tags')
