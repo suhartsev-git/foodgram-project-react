@@ -151,13 +151,14 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     Сериализатор для модели IngredientRecipe,
     включая данные из связанной модели Ingredient.
     """
-    name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
-    )
-    id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
-    )
+    # name = serializers.ReadOnlyField(source='ingredient.name')
+    # measurement_unit = serializers.ReadOnlyField(
+    #     source='ingredient.measurement_unit'
+    # )
+    # id = serializers.PrimaryKeyRelatedField(
+    #     queryset=Ingredient.objects.all()
+    # )
+    id = serializers.IntegerField(write_only=True)
 
     class Meta:
         """
@@ -169,8 +170,8 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = (
             "id",
-            "name",
-            "measurement_unit",
+            # "name",
+            # # "measurement_unit",
             "amount",
         )
 
@@ -322,7 +323,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingregient_data in ingredients:
             IngredientRecipe(
                 recipe=instance,
-                ingredient=ingregient_data["id"],
+                ingredient=ingregient_data["name"],
                 amount=ingregient_data["amount"]
             ).save
         return super().update(instance, validated_data)
