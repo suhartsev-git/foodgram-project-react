@@ -338,44 +338,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
-        ingredients_data = validated_data.pop('ingredients')
+        ingredients = validated_data.pop('ingredients')
         instance = super().update(instance, validated_data)
+        instance.tags.clear()
         instance.tags.set(tags)
-        existing_ingredient_ids = set(
-            instance.ingredients.values_list('ingredient__id', flat=True)
+        # instance.ingredients.clear()
+        self.create_ingredients(
+            recipe=instance,
+            ingredients=ingredients
         )
-        for ingredient_data in ingredients_data:
-            ingredient_id = ingredient_data['id']
-            amount = ingredient_data['amount']
-            if ingredient_id in existing_ingredient_ids:
-                instance.ingredients.filter(
-                    ingredient__id=ingredient_id
-                ).update(
-                    amount=amount
-                )
-            else:
-                ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-                instance.ingredients.create(
-                    ingredient=ingredient,
-                    amount=amount
-                )
-        instance.ingredients.exclude(
-            ingredient__id__in=existing_ingredient_ids
-        ).delete()
         instance.save()
         return instance
-        # tags = validated_data.pop('tags')
-        # ingredients = validated_data.pop('ingredients')
-        # instance = super().update(instance, validated_data)
-        # instance.tags.clear()
-        # instance.tags.set(tags)
-        # instance.ingredients.clear()
-        # self.create_ingredients(
-        #     recipe=instance,
-        #     ingredients=ingredients
-        # )
-        # instance.save()
-        # return instance
 
     def to_representation(self, instance):
         """
