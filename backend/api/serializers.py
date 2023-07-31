@@ -316,11 +316,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
+        recipe.tags.clear()
+        IngredientRecipe.objects.filter(recipe=recipe).delete()
         recipe.tags.set(tags)
-        ingredients = validated_data.pop('ingredients')
-        self.create_ingredients(recipe, ingredients)
-        recipe.save()
-        return recipe
+        self.create_ingredients(recipe, validated_data.pop('ingredients'))
+        return super().update(recipe, validated_data)
         # instance.tags.clear()
         # tags = validated_data.pop('tags')
         # instance.tags.set(tags)
@@ -353,10 +353,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients = IngredientInRecipeSerializer(
-        source='ingredientrecipe',
-        many=True,
-    )
+    ingredients = IngredientInRecipeSerializer(many=True,)
 
     class Meta:
         """
