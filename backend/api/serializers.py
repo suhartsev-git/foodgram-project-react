@@ -322,7 +322,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingregient_data in ingredients:
             IngredientRecipe(
                 recipe=instance,
-                ingredient=ingregient_data["ingredient"],
+                ingredient=ingregient_data["id"],
                 amount=ingregient_data["amount"]
             ).save
         return super().update(instance, validated_data)

@@ -28,9 +28,9 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "author",
-        "get_favorites",
+        "count_favorites",
     )
-    readonly_fields = ("get_favorites",)
+    readonly_fields = ("count_favorites",)
     search_fields = (
         "name",
         "author__username",
@@ -41,25 +41,16 @@ class RecipeAdmin(admin.ModelAdmin):
         "author__username",
         "tags__name",
     )
-    readonly_fields = ("get_favorites",)
+    readonly_fields = ("count_favorites",)
     inlines = (IngredientInline,)
     empty_value_display = "-пусто-"
 
-    def get_favorites(self, obj):
+    def count_favorites(self, obj):
         """
         Возвращает количество добавлений рецепта в избранное.
         """
         return obj.favorites.count()
-    get_favorites.short_description = "Избранное"
-
-    # def get_ingredients(self, obj):
-    #     """
-    #     Возвращает строку с перечислением ингредиентов рецепта.
-    #     """
-    #     return ', '.join([
-    #         ingredients.name for ingredients
-    #         in obj.ingredients.all()])
-    # get_ingredients.short_description = "Ингридиенты"
+    count_favorites.short_description = "Избранное"
 
 
 class TagAdmin(admin.ModelAdmin):
@@ -98,8 +89,8 @@ class FavoriteAdmin(admin.ModelAdmin):
     в административной панели.
     """
     list_display = ('user', 'recipe',)
-    search_fields = ('recipe__name', 'user__username',)
-    list_filter = ('recipe__tags',)
+    search_fields = ("recipe__name", "user__username",)
+    list_filter = ("recipe__tags",)
     empty_value_display = "-пусто-"
 
 
@@ -111,10 +102,10 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     """
     list_display = ('user', 'recipe',)
     search_fields = (
-        'recipe__name',
-        'recipe__author__username',
+        "recipe__name",
+        "recipe__author__username",
     )
-    list_filter = ('recipe__tags',)
+    list_filter = ("recipe__tags",)
     empty_value_display = "-пусто-"
 
 

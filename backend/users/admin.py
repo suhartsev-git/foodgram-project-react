@@ -25,7 +25,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     на авторов рецептов.
     """
     list_display = (
-        "pk",
+        "id",
         "user",
         "author",
     )
