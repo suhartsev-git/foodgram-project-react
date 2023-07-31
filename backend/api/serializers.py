@@ -296,6 +296,10 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate_ingredients(self, data):
+        """
+        Валидатор для поля "ingredients" в рецепте,
+        (анти-повтор ингредиента).
+        """
         ingredients = self.initial_data.get("ingredients")
         ingredients_id = [
             ingredient["id"] for ingredient in ingredients
