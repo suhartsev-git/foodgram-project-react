@@ -244,6 +244,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=obj.author).count()
 
 
+class AddIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+
+    class Meta:
+        model = IngredientRecipe
+        fields = ('id', 'amount')
+
+
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """
     Сериализатор для создания и обновления модели Recipe.
@@ -252,11 +260,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(
         validators=[validate_cooking_time]
     )
-    ingredients = IngredientInRecipeSerializer(
-        source='ingredient_amounts',
-        many=True,
-        # validators=[validate_ingredients]
-    )
+    ingredients = AddIngredientSerializer(many=True)
+    # ingredients = IngredientInRecipeSerializer(
+    #     source='ingredient_amounts',
+    #     many=True,
+    #     # validators=[validate_ingredients]
+    # )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
