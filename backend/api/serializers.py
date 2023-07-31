@@ -339,16 +339,47 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        instance = super().update(instance, validated_data)
-        instance.tags.clear()
-        instance.tags.set(tags)
-        instance.ingredients.clear()
-        self.create_ingredients(
-            recipe=instance,
-            ingredients=ingredients
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
         )
+        instance.image = validated_data.get('image', instance.image)
+        instance.tags.set(tags)
+        existing_ingredient_ids = list(
+            instance.ingredients.all().values_list('id', flat=True)
+        )
+        new_ingredient_ids = [ingredient['id'] for ingredient in ingredients]
+        instance.ingredients.remove(*[
+            ingredient_id for ingredient_id in existing_ingredient_ids
+            if ingredient_id not in new_ingredient_ids
+        ])
+        for ingredient_data in ingredients:
+            ingredient_id = ingredient_data['id']
+            amount = ingredient_data['amount']
+            if ingredient_id in existing_ingredient_ids:
+                instance.ingredients.through.objects.filter(
+                    recipe=instance, ingredient_id=ingredient_id
+                ).update(amount=amount)
+            else:
+                ingredient = Ingredient.objects.get(id=ingredient_id)
+                instance.ingredients.add(
+                    ingredient, through_defaults={'amount': amount}
+                )
         instance.save()
         return instance
+        # tags = validated_data.pop('tags')
+        # ingredients = validated_data.pop('ingredients')
+        # instance = super().update(instance, validated_data)
+        # instance.tags.clear()
+        # instance.tags.set(tags)
+        # instance.ingredients.clear()
+        # self.create_ingredients(
+        #     recipe=instance,
+        #     ingredients=ingredients
+        # )
+        # instance.save()
+        # return instance
 
     def to_representation(self, instance):
         """
