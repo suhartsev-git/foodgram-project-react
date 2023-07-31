@@ -295,6 +295,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
+    def validate_ingredients(self, data):
+        ingredients = self.initial_data.get("ingredients")
+        ingredients_ids = [
+            ingredient["id"] for ingredient in ingredients
+        ]
+        if len(ingredients) != len(set(ingredients_ids)):
+            raise serializers.ValidationError(
+                "Вы не можете добавить один ингредиент дважды"
+            )
+        return data
+
     # def validate_ingredients(self, value):
     #     ingredients_list = []
     #     for item in value:
