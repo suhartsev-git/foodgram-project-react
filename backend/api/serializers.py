@@ -281,90 +281,50 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def create(self, validated_data):
-        ingredients_data = validated_data.pop("ingredients")
-        tags_data = validated_data.pop("tags")
-        with transaction.atomic():
-            recipe = Recipe.objects.create(**validated_data)
-            ingredients_bulk_data = [
-                IngredientRecipe(
-                    ingredient=ingredient["id"],
-                    recipe=recipe,
-                    amount=ingredient["amount"],
-                )
-                for ingredient in ingredients_data
-            ]
-            IngredientRecipe.objects.bulk_create(ingredients_bulk_data)
+    def create_ingredients(self, recipe, ingredients):
+        """
+        Создает связанные объекты IngredientRecipe для рецепта.
+        """
+        ingredient_list = [
+            IngredientRecipe(
+                ingredient=ingredient_data.pop("id"),
+                amount=ingredient_data.pop("amount"),
+                recipe=recipe,
+            )
+            for ingredient_data in ingredients
+        ]
+        IngredientRecipe.objects.bulk_create(ingredient_list)
 
+    @transaction.atomic
+    def create(self, validated_data):
+        """
+        Создает новый рецепт.
+        """
+        ingredients = validated_data.pop("ingredients")
+        tags_data = validated_data.pop("tags")
+        recipe = Recipe.objects.create(
+            author=self.context["request"].user,
+            **validated_data
+        )
         recipe.tags.set(tags_data)
+        self.create_ingredients(recipe, ingredients)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop("ingredients", [])
-        tags_data = validated_data.pop("tags", [])
-        instance = super().update(instance, validated_data)
-        with transaction.atomic():
-            instance.tags.clear()
-            instance.tags.set(tags_data)
-            IngredientRecipe.objects.filter(recipe=instance).delete()
-            ingredients_bulk_data = [
-                IngredientRecipe(
-                    ingredient=ingredient["id"],
-                    recipe=instance,
-                    amount=ingredient["amount"],
-                )
-                for ingredient in ingredients_data
-            ]
-            IngredientRecipe.objects.bulk_create(ingredients_bulk_data)
-
-        return instance
-
-    # def create_ingredients(self, recipe, ingredients):
-    #     """
-    #     Создает связанные объекты IngredientRecipe для рецепта.
-    #     """
-    #     ingredient_list = [
-    #         IngredientRecipe(
-    #             ingredient=ingredient_data.pop("id"),
-    #             amount=ingredient_data.pop("amount"),
-    #             recipe=recipe,
-    #         )
-    #         for ingredient_data in ingredients
-    #     ]
-    #     IngredientRecipe.objects.bulk_create(ingredient_list)
-
-    # @transaction.atomic
-    # def create(self, validated_data):
-    #     """
-    #     Создает новый рецепт.
-    #     """
-    #     ingredients = validated_data.pop("ingredients")
-    #     tags_data = validated_data.pop("tags")
-    #     recipe = Recipe.objects.create(
-    #         author=self.context["request"].user,
-    #         **validated_data
-    #     )
-    #     recipe.tags.set(tags_data)
-    #     self.create_ingredients(recipe=recipe, ingredients=ingredients)
-    #     return recipe
-
-    # @transaction.atomic
-    # def update(self, instance, validated_data):
-    #     """
-    #     Обновляет существующий рецепт.
-    #     """
-    #     tags = validated_data.pop('tags')
-    #     ingredients = validated_data.pop('ingredients')
-    #     instance = super().update(instance, validated_data)
-    #     instance.tags.clear()
-    #     instance.tags.set(tags)
-    #     instance.ingredients.clear()
-    #     self.create_ingredients(
-    #         recipe=instance,
-    #         ingredients=ingredients
-    #     )
-    #     instance.save()
-    #     return instance
+        """
+        Обновляет существующий рецепт.
+        """
+        instance.tags.clear()
+        tags = validated_data.pop('tags')
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        ingredients = validated_data.pop('ingredients')
+        self.create_ingredients(instance, ingredients)
+        return super().update(
+            instance,
+            validated_data
+        )
 
     def to_representation(self, instance):
         """
