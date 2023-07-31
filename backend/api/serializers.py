@@ -170,8 +170,8 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = (
             "id",
-            # "name",
-            # # "measurement_unit",
+            "name",
+            "measurement_unit",
             "amount",
         )
 
