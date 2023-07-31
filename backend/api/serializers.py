@@ -311,16 +311,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     @transaction.atomic
-    def update(self, recipe, validated_data):
+    def update(self, instance, validated_data):
         """
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
-        recipe.tags.clear()
-        IngredientRecipe.objects.filter(recipe=recipe).delete()
-        recipe.tags.set(tags)
-        self.create_ingredients(recipe, validated_data.pop('ingredients'))
-        return super().update(recipe, validated_data)
+        instance.tags.set(tags)
+        IngredientRecipe.objects.filter(recipe=instance).delete()
+        instance.tags.set(tags)
+        self.create_ingredients(instance, validated_data.pop('ingredients'))
+        return super().update(instance, validated_data)
         # instance.tags.clear()
         # tags = validated_data.pop('tags')
         # instance.tags.set(tags)
@@ -353,7 +353,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients = IngredientInRecipeSerializer(many=True,)
+    ingredients = IngredientInRecipeSerializer(
+        source='ingredientrecipe',
+        many=True,
+    )
 
     class Meta:
         """
