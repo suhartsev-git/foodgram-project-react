@@ -24,12 +24,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     Административная модель для подписок пользователей
     на авторов рецептов.
     """
-    list_display = (
-        "id",
-        "user",
-        "author",
-    )
-    list_editable = ("user", "author",)
+    list_display = ("user", "author",)
     ordering = ("user",)
     empty_value_display = "-пусто-"
 

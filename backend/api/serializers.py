@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from api.validators import (
     validate_cooking_time,
-    # validate_ingredients,
+    validate_ingredients,
     validate_subscribed,
     validate_tags
 )
@@ -267,6 +267,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = IngredientAddSerializer(
         many=True,
+        validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -302,9 +303,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             IngredientRecipe(
                 recipe=recipe,
                 ingredient=get_object_or_404(
-                    Ingredient, id=ingredient.get('id')
+                    Ingredient, id=ingredient.get("id")
                 ),
-                amount=ingredient.get('amount')
+                amount=ingredient.get("amount")
             )
             for ingredient in ingredients
         ]
@@ -315,8 +316,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает новый рецепт.
         """
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop("ingredients")
+        tags = validated_data.pop("tags")
         recipe = Recipe.objects.create(
             author=self.context["request"].user,
             **validated_data
@@ -330,20 +331,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Обновляет существующий рецепт.
         """
-        # instance.tags.clear()
-        # tags = validated_data.pop('tags')
-        # instance.tags.set(tags)
-        # ingredients = validated_data.pop('ingredients')
-        # IngredientRecipe.objects.filter(recipe=instance).delete()
-        # super().update(instance, validated_data)
-        # self.create_ingredients(ingredients, instance)
-        # instance.save()
-        # return instance
         instance.tags.clear()
-        tags = validated_data.pop('tags')
+        tags = validated_data.pop("tags")
         instance.tags.set(tags)
         instance.ingredients.clear()
-        ingredients = validated_data.pop('ingredients')
+        ingredients = validated_data.pop("ingredients")
         self.create_ingredients(ingredients, instance)
         return super().update(
             instance,

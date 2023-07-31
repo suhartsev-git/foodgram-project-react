@@ -76,7 +76,7 @@ class IngredientAdmin(admin.ModelAdmin):
     Используется для настройки отображения и фильтрации ингредиентов
     в административной панели.
     """
-    list_display = ("id", "name", "measurement_unit",)
+    list_display = ("name", "measurement_unit",)
     search_fields = ("name",)
     list_filter = ("name",)
     empty_value_display = "-пусто-"

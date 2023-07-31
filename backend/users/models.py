@@ -93,4 +93,4 @@ class Subscription(models.Model):
         """
         Возвращает строковое представление подписки.
         """
-        return f"{self.user} подписан на {self.author}"
+        return f'{self.user.username} подписан на {self.author.username}'
