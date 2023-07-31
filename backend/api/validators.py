@@ -1,40 +1,19 @@
-from django.shortcuts import get_object_or_404
 from django.conf import settings
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 
 from users.models import Subscription
-from recipes.models import Ingredient
 
 
-# def validate_ingredients(value):
-#     """
-#     Валидатор для поля "ingredients" в рецепте.
-#     """
-#     if not value or value == 0:
-#         raise ValidationError(
-#             f"Количество ингредиентов не может быть пустым, "
-#             f"или быть равно {settings.MIN_VALUE_IS_NULL}"
-#         )
-#     return value
 def validate_ingredients(value):
-    ingredients = value
-    if not ingredients:
-        raise ValidationError({
-            'ingredients': 'Совсем без ингредиента нельзя!'
-        })
-    ingredients_list = []
-    for item in ingredients:
-        ingredient = get_object_or_404(Ingredient, id=item['id'])
-        if ingredient in ingredients_list:
-            raise ValidationError({
-                'ingredients': 'Ингредиенты не должны повторяться!'
-            })
-        if int(item['amount']) < settings.MIN_VALUE_IS_ONE:
-            raise ValidationError({
-                'amount': 'Ингредиента должно быть не менее одного'
-            })
-        ingredients_list.append(ingredient)
+    """
+    Валидатор для поля "ingredients" в рецепте.
+    """
+    if not value or value == 0:
+        raise ValidationError(
+            f"Количество ингредиентов не может быть пустым, "
+            f"или быть равно {settings.MIN_VALUE_IS_NULL}"
+        )
     return value
 
 
