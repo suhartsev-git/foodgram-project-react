@@ -168,7 +168,10 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
-    id = serializers.IntegerField(source='ingredient.id', read_only=True)
+    id = serializers.IntegerField(
+        source='ingredient.id',
+        read_only=True
+    )
 
     class Meta:
         """
@@ -312,12 +315,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает новый рецепт.
         """
-        request = self.context.get('request')
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
-        recipe.tags.set(tags)
-        self.create_ingredients(ingredients, recipe)
+        ingredients = validated_data.pop("ingredients")
+        tags_data = validated_data.pop("tags")
+        recipe = Recipe.objects.create(
+            author=self.context["request"].user,
+            **validated_data
+        )
+        recipe.tags.set(tags_data)
+        self.create_ingredients(recipe, ingredients)
         return recipe
 
     @transaction.atomic
@@ -325,15 +330,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Обновляет существующий рецепт.
         """
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
         instance.tags.clear()
+        tags = validated_data.pop('tags')
         instance.tags.set(tags)
-        IngredientRecipe.objects.filter(recipe=instance).delete()
-        super().update(instance, validated_data)
-        self.create_ingredients(ingredients, instance)
-        instance.save()
-        return instance
+        instance.ingredients.clear()
+        ingredients = validated_data.pop('ingredients')
+        self.create_ingredients(instance, ingredients)
+        return super().update(
+            instance,
+            validated_data
+        )
 
     def to_representation(self, instance):
         """
@@ -357,7 +363,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     ingredients = IngredientInRecipeSerializer(
-        source='ingredientrecipe',
+        source="ingredient.id",
         many=True,
     )
 
