@@ -1,11 +1,12 @@
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from api.validators import (
     validate_cooking_time,
-    validate_ingredients,
+    # validate_ingredients,
     validate_subscribed,
     validate_tags
 )
@@ -294,14 +295,20 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        ingredient_list = [
-            IngredientRecipe(
-                ingredient=ingredient_data.pop("id"),
-                amount=ingredient_data.pop("amount"),
-                recipe=recipe,
+        ingredient_list = []
+        for ingredient in ingredients:
+            current_ingredient = get_object_or_404(
+                Ingredient,
+                id=ingredient.get('id')
             )
-            for ingredient_data in ingredients
-        ]
+            amount = ingredient.get('amount')
+            ingredient_list.append(
+                IngredientRecipe(
+                    recipe=recipe,
+                    ingredient=current_ingredient,
+                    amount=amount
+                )
+            )
         IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
