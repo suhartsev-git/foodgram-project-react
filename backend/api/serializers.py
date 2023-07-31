@@ -311,16 +311,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     @transaction.atomic
-    def update(self, instance, validated_data):
+    def update(self, recipe, validated_data):
         """
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
-        instance.tags.set(tags)
-        IngredientRecipe.objects.filter(recipe=instance).delete()
-        instance.tags.set(tags)
-        self.create_ingredients(instance, validated_data.pop('ingredients'))
-        return super().update(instance, validated_data)
+        IngredientRecipe.objects.filter(recipe=recipe).delete()
+        recipe.tags.set(tags)
+        self.create_ingredients(recipe, validated_data.pop('ingredients'))
+        return super().update(recipe, validated_data)
         # instance.tags.clear()
         # tags = validated_data.pop('tags')
         # instance.tags.set(tags)
