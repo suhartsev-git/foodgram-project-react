@@ -1,11 +1,14 @@
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+from django.conf import settings
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from api.validators import (
     validate_cooking_time,
-    validate_ingredients,
+    # validate_ingredients,
     validate_subscribed,
     validate_tags
 )
@@ -254,7 +257,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
     ingredients = IngredientInRecipeSerializer(
         many=True,
-        validators=[validate_ingredients]
+        # validators=[validate_ingredients]
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -281,6 +284,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "text",
             "cooking_time",
         )
+
+    def validate_ingredients(self, value):
+        ingredients = value
+        if not ingredients:
+            raise ValidationError({
+                'ingredients': 'Совсем без ингредиента нельзя!'
+            })
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError({
+                    'ingredients': 'Ингредиенты не должны повторяться!'
+                })
+            if int(item['amount']) < settings.MIN_VALUE_IS_ONE:
+                raise ValidationError({
+                    'amount': 'Ингредиента должно быть не менее одного'
+                })
+            ingredients_list.append(ingredient)
+        return value
 
     def create_ingredients(self, ingredients, recipe):
         """
