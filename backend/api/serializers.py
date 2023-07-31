@@ -263,16 +263,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     """
     author = UserSerializerCustom(read_only=True)
     cooking_time = serializers.IntegerField(
-        validators=[validate_cooking_time]
+        validators=[validate_cooking_time()]
     )
     ingredients = IngredientAddSerializer(
         many=True,
-        validators=[validate_ingredients]
+        validators=[validate_ingredients()]
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
-        validators=[validate_tags]
+        validators=[validate_tags()]
     )
     image = Base64ImageField()
 
@@ -294,20 +294,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "text",
             "cooking_time",
         )
-
-    def validate_ingredients(self, ingredients):
-        """
-        Валидация на дублирование ингредиента.
-        """
-        ingredient_ids = set()
-        for ingredient in ingredients:
-            ingredient_id = ingredient.get("id")
-            if ingredient_id in ingredient_ids:
-                raise serializers.ValidationError(
-                    "Ингредиенты не должны повторяться."
-                )
-            ingredient_ids.add(ingredient_id)
-        return ingredients
 
     def create_ingredients(self, ingredients, recipe):
         """
