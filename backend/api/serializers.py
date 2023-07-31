@@ -282,33 +282,31 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def create_ingredients(self, recipe, ingredients):
+    def create_ingredients(self, ingredients, recipe):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        ingredient_list = [
-            IngredientRecipe(
-                ingredient=ingredient_data.pop("id"),
-                amount=ingredient_data.pop("amount"),
+        IngredientRecipe.objects.bulk_create(
+            [IngredientRecipe(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
-            )
-            for ingredient_data in ingredients
-        ]
-        IngredientRecipe.objects.bulk_create(ingredient_list)
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
 
     @transaction.atomic
     def create(self, validated_data):
         """
         Создает новый рецепт.
         """
-        ingredients = validated_data.pop("ingredients")
-        tags_data = validated_data.pop("tags")
-        recipe = Recipe.objects.create(
-            author=self.context["request"].user,
-            **validated_data
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients(
+            recipe=recipe,
+            ingredients=ingredients
         )
-        recipe.tags.set(tags_data)
-        self.create_ingredients(recipe, ingredients)
         return recipe
 
     @transaction.atomic
@@ -317,17 +315,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         Обновляет существующий рецепт.
         """
         tags = validated_data.pop('tags')
-        instance.tags.set(tags)
         ingredients = validated_data.pop('ingredients')
+        instance = super().update(instance, validated_data)
+        instance.tags.clear()
+        instance.tags.set(tags)
         instance.ingredients.clear()
-        for ingregient_data in ingredients:
-            IngredientRecipe(
-                recipe=instance,
-                ingredient=ingregient_data["name"],
-                amount=ingregient_data["amount"]
-            ).save
-        return super().update(instance, validated_data)
-
+        self.create_ingredients(
+            recipe=instance, ingredients=ingredients)
+        instance.save()
+        return instance
         # instance.tags.clear()
         # tags = validated_data.pop('tags')
         # instance.tags.set(tags)
