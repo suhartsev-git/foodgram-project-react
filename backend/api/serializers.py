@@ -1,10 +1,7 @@
 from django.db import transaction
-from django.shortcuts import get_object_or_404
-from django.conf import settings
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from api.validators import (
     validate_cooking_time,
@@ -292,21 +289,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def validate_ingredients(self, value):
-        if not value:
-            raise ValidationError({
-                'ingredients': 'Совсем без ингредиента нельзя!'
-            })
-        ingredients_list = []
-        for item in value:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if int(item['amount']) < settings.MIN_VALUE_IS_ONE:
-                raise ValidationError({
-                    'amount': 'Ингредиента должно быть не менее одного'
-                })
-            ingredients_list.append(ingredient)
-        return value
-
     def create_ingredients(self, ingredients, recipe):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
@@ -364,10 +346,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients = IngredientInRecipeSerializer(
-        source='ingredientrecipe',
-        many=True,
-    )
+    ingredients = IngredientInRecipeSerializer(many=True,)
 
     class Meta:
         """
