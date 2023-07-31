@@ -90,10 +90,9 @@ class FavoriteAdmin(admin.ModelAdmin):
     Используется для настройки отображения и фильтрации избранных рецептов
     в административной панели.
     """
-    list_display = ("user", "recipe",)
-    # list_filter = ("user", "recipe",)
-    search_fields = ("user__username", "recipe__name")
-    empty_value_display = "-пусто-"
+    list_display = ('id', 'user', 'recipe',)
+    search_fields = ('recipe__name', 'user__username',)
+    list_filter = ('recipe__tags',)
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):
@@ -102,10 +101,11 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     Используется для настройки отображения и фильтрации списка покупок
     в административной панели.
     """
-    list_display = ("recipe", "user",)
-    # list_filter = ("recipe", "user",)
-    search_fields = ("user__username", "recipe__name")
-    empty_value_display = "-пусто-"
+    list_display = ('id', 'user', 'recipe',)
+    search_fields = (
+        'recipe__name', 'recipe__author__username',
+    )
+    list_filter = ('recipe__tags',)
 
 
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
