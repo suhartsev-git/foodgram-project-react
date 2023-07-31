@@ -34,11 +34,7 @@ class RecipeAdmin(admin.ModelAdmin):
         "author__username",
         "tags__name",
     )
-    list_filter = (
-        "author",
-        "name",
-        "tags",
-    )
+    list_filter = ("name", "author__username", "tags__name")
     inlines = (IngredientInline,)
     empty_value_display = "-пусто-"
 
@@ -107,7 +103,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     в административной панели.
     """
     list_display = ("recipe", "user",)
-    list_filter = ("recipe", "user",)
+    # list_filter = ("recipe", "user",)
     search_fields = ("user__username", "recipe__name")
     empty_value_display = "-пусто-"
 
