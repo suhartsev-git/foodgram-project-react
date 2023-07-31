@@ -104,7 +104,6 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     search_fields = (
         "recipe__name",
         "user__username",
-        "recipe__author__username",
     )
     list_filter = ("recipe__tags",)
     empty_value_display = "-пусто-"
