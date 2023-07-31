@@ -315,12 +315,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает новый рецепт.
         """
-        request = self.context.get('request')
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
-        recipe.tags.set(tags)
-        self.create_ingredients(ingredients, recipe)
+        ingredients = validated_data.pop("ingredients")
+        tags_data = validated_data.pop("tags")
+        recipe = Recipe.objects.create(
+            author=self.context["request"].user,
+            **validated_data
+        )
+        recipe.tags.set(tags_data)
+        self.create_ingredients(recipe, ingredients)
         return recipe
 
     @transaction.atomic
@@ -360,7 +362,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     ingredients = IngredientInRecipeSerializer(
-        source='ingredientrecipe',
+        source="ingredientrecipe",
         many=True,
     )
 
@@ -397,7 +399,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         Определяет,
         добавлен ли текущий рецепт в корзину покупок текущего пользователя.
         """
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request.user.is_authenticated:
             return obj.carts.filter(user=request.user).exists()
         return False
@@ -407,7 +409,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         Определяет,
         добавлен ли текущий рецепт в избранное текущего пользователя.
         """
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request.user.is_authenticated:
             return obj.favorites.filter(user=request.user).exists()
         return False
@@ -436,7 +438,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         """
         return BriefInfoSerializer(
             instance.recipe,
-            context={'request': self.context.get('request')}
+            context={"request": self.context.get("request")}
         ).data
 
 
@@ -463,5 +465,5 @@ class FavoriteSerializer(serializers.ModelSerializer):
         """
         return BriefInfoSerializer(
             instance.recipe,
-            context={'request': self.context.get('request')}
+            context={"request": self.context.get("request")}
         ).data
