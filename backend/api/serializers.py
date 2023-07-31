@@ -302,9 +302,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     #             Ingredient, id=item["id"]
     #         )
     #         if ingredient in ingredients_list:
-    #             raise serializers.ValidationError({
-    #                 "ingredients": "Ингридиенты не должны повторяться."
-    #             })
+    #             raise serializers.ValidationError(
+    #                 "Ингридиенты не должны повторяться."
+    #             )
     #         ingredients_list.append(ingredient)
     #     return value
 

@@ -14,6 +14,10 @@ def validate_ingredients(value):
             f"Количество ингредиентов не может быть пустым, "
             f"или быть равно {settings.MIN_VALUE_IS_NULL}"
         )
+    chek_id = [ingredient['id'] for ingredient in value]
+    if len(chek_id) != len(set(chek_id)):
+        raise ValidationError(
+            "Данный ингредиент уже есть в рецепте.")
     return value
 
 
