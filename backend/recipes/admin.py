@@ -30,9 +30,9 @@ class RecipeAdmin(admin.ModelAdmin):
         "author",
     )
     search_fields = (
-        "author",
         "name",
-        "tags",
+        "author__username",
+        "tags__name",
     )
     list_filter = (
         "author",
@@ -95,8 +95,8 @@ class FavoriteAdmin(admin.ModelAdmin):
     в административной панели.
     """
     list_display = ("user", "recipe",)
-    list_filter = ("user", "recipe",)
-    search_fields = ("user", "recipe",)
+    # list_filter = ("user", "recipe",)
+    search_fields = ("user__username", "recipe__name")
     empty_value_display = "-пусто-"
 
 
@@ -108,7 +108,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     """
     list_display = ("recipe", "user",)
     list_filter = ("recipe", "user",)
-    search_fields = ("user", )
+    search_fields = ("user__username", "recipe__name")
     empty_value_display = "-пусто-"
 
 
