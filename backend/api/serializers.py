@@ -291,7 +291,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def create_ingredients(self, recipe, ingredients):
+    def create_ingredients(self, ingredients, recipe):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
