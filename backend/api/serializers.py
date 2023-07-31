@@ -307,39 +307,26 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             **validated_data
         )
         recipe.tags.set(tags_data)
-        self.create_ingredients(recipe, ingredients)
+        self.create_ingredients(recipe=recipe, ingredients=ingredients)
         return recipe
 
     @transaction.atomic
-    def update(self, recipe, validated_data):
+    def update(self, instance, validated_data):
         """
         Обновляет существующий рецепт.
         """
-        recipe.name = validated_data.get("name", recipe.name)
-        recipe.text = validated_data.get("text", recipe.text)
-        recipe.cooking_time = validated_data.get(
-            "cooking_time", recipe.cooking_time
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance = super().update(instance, validated_data)
+        instance.tags.clear()
+        instance.tags.set(tags)
+        instance.ingredients.clear()
+        self.create_ingredients(
+            recipe=instance,
+            ingredients=ingredients
         )
-        recipe.image = validated_data.get("image", recipe.image)
-        tags_data = validated_data.get("tags")
-        if tags_data is not None:
-            recipe.tags.set(tags_data)
-        recipe.ingredients.clear()
-        ingredients = validated_data.get("ingredients")
-        if ingredients:
-            self.create_ingredients(recipe, ingredients)
-        recipe.save()
-        return recipe
-        # recipe.tags.clear()
-        # tags = validated_data.pop('tags')
-        # recipe.tags.set(tags)
-        # recipe.ingredients.clear()
-        # ingredients = validated_data.pop('ingredients')
-        # self.create_ingredients(recipe, ingredients)
-        # return super().update(
-        #     recipe,
-        #     validated_data
-        # )
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         """
