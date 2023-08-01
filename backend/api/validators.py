@@ -17,7 +17,7 @@ def validate_ingredients(value):
     ingredients_list = []
     for ingredient in value:
         if ingredient['id'] in ingredients_list:
-            raise serializers.ValidationError(
+            raise ValidationError(
                 "Ингридиенты должны быть уникальны"
             )
         ingredients_list.append(ingredient['id'])
