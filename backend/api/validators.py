@@ -14,6 +14,13 @@ def validate_ingredients(value):
             f"Количество ингредиентов не может быть пустым, "
             f"или быть равно {settings.MIN_VALUE_IS_NULL}"
         )
+    ingredients_list = []
+    for ingredient in value:
+        if ingredient['id'] in ingredients_list:
+            raise serializers.ValidationError(
+                "Ингридиенты должны быть уникальны"
+            )
+        ingredients_list.append(ingredient['id'])
     return value
 
 

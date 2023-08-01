@@ -295,20 +295,20 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def validate_ingredients(self, data):
-        """
-        Валидатор для поля "ingredients" в рецепте,
-        (анти-повтор ингредиента).
-        """
-        ingredients = self.initial_data.get("ingredients")
-        ingredients_id = [
-            ingredient["id"] for ingredient in ingredients
-        ]
-        if len(ingredients) != len(set(ingredients_id)):
-            raise serializers.ValidationError(
-                "Вы не можете добавить два одинаковых ингредиента"
-            )
-        return data
+    # def validate_ingredients(self, data):
+    #     """
+    #     Валидатор для поля "ingredients" в рецепте,
+    #     (анти-повтор ингредиента).
+    #     """
+    #     ingredients = self.initial_data.get("ingredients")
+    #     ingredients_id = [
+    #         ingredient["id"] for ingredient in ingredients
+    #     ]
+    #     if len(ingredients) != len(set(ingredients_id)):
+    #         raise serializers.ValidationError(
+    #             "Вы не можете добавить два одинаковых ингредиента"
+    #         )
+    #     return data
 
     def create_ingredients(self, ingredients, recipe):
         """
