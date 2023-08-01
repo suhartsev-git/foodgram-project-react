@@ -2,6 +2,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 
 from api.validators import (
@@ -295,20 +296,29 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def validate_ingredients(self, data):
+    def validate_ingredients(self, value):
         """
         Валидатор для поля "ingredients" в рецепте,
         (анти-повтор ингредиента).
         """
-        ingredients = self.initial_data.get("ingredients")
-        ingredients_id = [
-            ingredient["id"] for ingredient in ingredients
-        ]
-        if len(ingredients) != len(set(ingredients_id)):
-            raise serializers.ValidationError(
-                "Вы не можете добавить два одинаковых ингредиента"
-            )
-        return data
+        ingredients_list = []
+        for item in value:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError({
+                    'ingredients': 'Ингридиенты не могут повторяться!'
+                })
+            try:
+                int(item['amount'])
+            except Exception:
+                raise ValidationError(
+                    {'amount': 'Количество должно быть числом!'}
+                )
+            if int(item['amount']) < 0:
+                raise ValidationError({
+                    'amount': 'Количество ингредиента должно быть больше чем 0'
+                })
+        return value
 
     def create_ingredients(self, ingredients, recipe):
         """
