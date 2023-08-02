@@ -301,65 +301,51 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         (анти-повтор ингредиента).
         """
         ingredients = self.initial_data.get("ingredients")
-        unique_ingredients = set()
-        for ingredient in ingredients:
-            ingredient_id = ingredient["id"]
-            if ingredient_id in unique_ingredients:
+        ingredients_id = [
+            ingredient["id"] for ingredient in ingredients
+        ]
+        if len(ingredients) != len(set(ingredients_id)):
+            raise serializers.ValidationError(
+                "Вы не можете добавить два одинаковых ингредиента"
+            )
+        existing_ingredient_ids = Ingredient.objects.values_list(
+            'id', flat=True
+        )
+        for ingredient_id in ingredients_id:
+            if ingredient_id not in existing_ingredient_ids:
                 raise serializers.ValidationError(
-                    "Вы не можете добавить два одинаковых ингредиента."
+                    f"Ингредиент с id={ingredient_id} не существует"
                 )
-            unique_ingredients.add(ingredient_id)
+
         return data
 
     def create_ingredients(self, ingredients, recipe):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        for ingredient_data in ingredients:
-            ingredient_id = ingredient_data.get("id")
-            amount = ingredient_data.get("amount")
-            ingredient = get_object_or_404(Ingredient, id=ingredient_id)
-            try:
-                ingredient_recipe = IngredientRecipe.objects.get(
-                    recipe=recipe, ingredient=ingredient
+        existing_ingredient_ids = Ingredient.objects.values_list(
+            'id', flat=True
+        )
+        for ingredient in ingredients:
+            ingredient_id = ingredient.get("id")
+            amount = ingredient.get("amount")
+
+            if ingredient_id in existing_ingredient_ids:
+                # Если ингредиент существует, обновим количество
+                ingredient_recipe = get_object_or_404(
+                    IngredientRecipe,
+                    recipe=recipe,
+                    ingredient_id=ingredient_id
                 )
                 ingredient_recipe.amount += amount
                 ingredient_recipe.save()
-            except IngredientRecipe.DoesNotExist:
-                ingredient_recipe = IngredientRecipe(
-                    recipe=recipe, ingredient=ingredient, amount=amount
+            else:
+                # Если ингредиента нет, создадим новую связь
+                IngredientRecipe.objects.create(
+                    recipe=recipe,
+                    ingredient_id=ingredient_id,
+                    amount=amount
                 )
-                ingredient_recipe.save()
-    # def validate_ingredients(self, data):
-    #     """
-    #     Валидатор для поля "ingredients" в рецепте,
-    #     (анти-повтор ингредиента).
-    #     """
-    #     ingredients = self.initial_data.get("ingredients")
-    #     ingredients_id = [
-    #         ingredient["id"] for ingredient in ingredients
-    #     ]
-    #     if len(ingredients) != len(set(ingredients_id)):
-    #         raise serializers.ValidationError(
-    #             "Вы не можете добавить два одинаковых ингредиента"
-    #         )
-    #     return data
-
-    # def create_ingredients(self, ingredients, recipe):
-    #     """
-    #     Создает связанные объекты IngredientRecipe для рецепта.
-    #     """
-    #     ingredient_list = [
-    #         IngredientRecipe(
-    #             recipe=recipe,
-    #             ingredient=get_object_or_404(
-    #                 Ingredient, id=ingredient.get("id")
-    #             ),
-    #             amount=ingredient.get("amount")
-    #         )
-    #         for ingredient in ingredients
-    #     ]
-    #     IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -391,6 +377,67 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             instance,
             validated_data
         )
+    # def validate_ingredients(self, data):
+    #     """
+    #     Валидатор для поля "ingredients" в рецепте,
+    #     (анти-повтор ингредиента).
+    #     """
+    #     ingredients = self.initial_data.get("ingredients")
+    #     ingredients_id = [
+    #         ingredient["id"] for ingredient in ingredients
+    #     ]
+    #     if len(ingredients) != len(set(ingredients_id)):
+    #         raise serializers.ValidationError(
+    #             "Вы не можете добавить два одинаковых ингредиента"
+    #         )
+    #     return data
+
+    # def create_ingredients(self, ingredients, recipe):
+    #     """
+    #     Создает связанные объекты IngredientRecipe для рецепта.
+    #     """
+    #     ingredient_list = [
+    #         IngredientRecipe(
+    #             recipe=recipe,
+    #             ingredient=get_object_or_404(
+    #                 Ingredient, id=ingredient.get("id")
+    #             ),
+    #             amount=ingredient.get("amount")
+    #         )
+    #         for ingredient in ingredients
+    #     ]
+    #     IngredientRecipe.objects.bulk_create(ingredient_list)
+
+    # @transaction.atomic
+    # def create(self, validated_data):
+    #     """
+    #     Создает новый рецепт.
+    #     """
+    #     ingredients = validated_data.pop("ingredients")
+    #     tags = validated_data.pop("tags")
+    #     recipe = Recipe.objects.create(
+    #         author=self.context["request"].user,
+    #         **validated_data
+    #     )
+    #     recipe.tags.set(tags)
+    #     self.create_ingredients(ingredients, recipe)
+    #     return recipe
+
+    # @transaction.atomic
+    # def update(self, instance, validated_data):
+    #     """
+    #     Обновляет существующий рецепт.
+    #     """
+    #     instance.tags.clear()
+    #     tags = validated_data.pop("tags")
+    #     instance.tags.set(tags)
+    #     instance.ingredients.clear()
+    #     ingredients = validated_data.pop("ingredients")
+    #     self.create_ingredients(ingredients, instance)
+    #     return super().update(
+    #         instance,
+    #         validated_data
+    #     )
 
     def to_representation(self, instance):
         """
