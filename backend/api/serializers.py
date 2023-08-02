@@ -1,5 +1,5 @@
-from django.db.models import F
 from django.db import transaction
+from collections import Counter
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -298,16 +298,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, data):
         """
-        Валидатор для поля "ingredients" в рецепте,
-        (анти-повтор ингредиента).
+        Validator for the "ingredients" field in the recipe.
         """
-        ingredients = self.initial_data.get("ingredients")
-        ingredients_id = [
-            ingredient["id"] for ingredient in ingredients
+        ingredient_ids = [ingredient["id"] for ingredient in data]
+        duplicate_ingredients = [
+            ingredient_id for ingredient_id,
+            count in Counter(ingredient_ids).items() if count > 1
         ]
-        if len(ingredients) != len(set(ingredients_id)):
+        if duplicate_ingredients:
             raise serializers.ValidationError(
-                "Вы не можете добавить два одинаковых ингредиента"
+                f"Cannot add the same ingredient twice: "
+                f"{', '.join(map(str, duplicate_ingredients))}"
             )
         return data
 
@@ -318,16 +319,19 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient_data in ingredients:
             ingredient_id = ingredient_data["id"]
             amount = ingredient_data["amount"]
-            ingredient_recipe, created = (
-                IngredientRecipe.objects.get_or_create(
+
+            try:
+                ingredient_recipe = IngredientRecipe.objects.get(
+                    recipe=recipe, ingredient_id=ingredient_id
+                )
+                ingredient_recipe.amount += amount
+                ingredient_recipe.save()
+            except IngredientRecipe.DoesNotExist:
+                ingredient_recipe = IngredientRecipe.objects.create(
                     recipe=recipe,
                     ingredient=get_object_or_404(Ingredient, id=ingredient_id),
-                    defaults={"amount": amount}
+                    amount=amount
                 )
-            )
-        if not created:
-            ingredient_recipe.amount = F('amount') + amount
-            ingredient_recipe.save()
 
     @transaction.atomic
     def create(self, validated_data):
