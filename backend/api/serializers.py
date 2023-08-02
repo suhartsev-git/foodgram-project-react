@@ -1,3 +1,4 @@
+from django.db.models import F
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
@@ -314,31 +315,19 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
-        ingredient_list = []
-        existing_ingredients = IngredientRecipe.objects.filter(recipe=recipe)
-        existing_ingredients_dict = {
-            ingredient.ingredient.id:
-            ingredient for ingredient in existing_ingredients
-        }
-        for ingredient in ingredients:
-            ingredient_id = ingredient.get("id")
-            amount = ingredient.get("amount")
-            if ingredient_id in existing_ingredients_dict:
-                existing_ingredient = existing_ingredients_dict[
-                    ingredient_id
-                ]
-                existing_ingredient.amount += amount
-                existing_ingredient.full_clean()
-                existing_ingredient.save()
-            else:
-                new_ingredient = IngredientRecipe(
+        for ingredient_data in ingredients:
+            ingredient_id = ingredient_data["id"]
+            amount = ingredient_data["amount"]
+            ingredient_recipe, created = (
+                IngredientRecipe.objects.get_or_create(
                     recipe=recipe,
                     ingredient=get_object_or_404(Ingredient, id=ingredient_id),
-                    amount=amount
+                    defaults={"amount": amount}
                 )
-                ingredient_list.append(new_ingredient)
-        if ingredient_list:
-            IngredientRecipe.objects.bulk_create(ingredient_list)
+            )
+        if not created:
+            ingredient_recipe.amount = F('amount') + amount
+            ingredient_recipe.save()
 
     @transaction.atomic
     def create(self, validated_data):
