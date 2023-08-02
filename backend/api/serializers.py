@@ -1,6 +1,5 @@
 from django.db import transaction
-# from django.shortcuts import get_object_or_404
-from django.db.models import F
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
@@ -302,13 +301,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         (анти-повтор ингредиента).
         """
         ingredients = self.initial_data.get("ingredients")
-        ingredients_id = [
-            ingredient["id"] for ingredient in ingredients
-        ]
-        if len(ingredients) != len(set(ingredients_id)):
-            raise serializers.ValidationError(
-                "Вы не можете добавить два одинаковых ингредиента"
-            )
+        unique_ingredients = set()
+        for ingredient in ingredients:
+            ingredient_id = ingredient["id"]
+            if ingredient_id in unique_ingredients:
+                raise serializers.ValidationError(
+                    "Вы не можете добавить два одинаковых ингредиента."
+                )
+            unique_ingredients.add(ingredient_id)
         return data
 
     def create_ingredients(self, ingredients, recipe):
@@ -318,19 +318,48 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient_data in ingredients:
             ingredient_id = ingredient_data.get("id")
             amount = ingredient_data.get("amount")
+            ingredient = get_object_or_404(Ingredient, id=ingredient_id)
             try:
                 ingredient_recipe = IngredientRecipe.objects.get(
-                    recipe=recipe,
-                    ingredient_id=ingredient_id
+                    recipe=recipe, ingredient=ingredient
                 )
-                ingredient_recipe.amount = F('amount') + amount
+                ingredient_recipe.amount += amount
                 ingredient_recipe.save()
             except IngredientRecipe.DoesNotExist:
-                ingredient_recipe = IngredientRecipe.objects.create(
-                    recipe=recipe,
-                    ingredient_id=ingredient_id,
-                    amount=amount
+                ingredient_recipe = IngredientRecipe(
+                    recipe=recipe, ingredient=ingredient, amount=amount
                 )
+                ingredient_recipe.save()
+    # def validate_ingredients(self, data):
+    #     """
+    #     Валидатор для поля "ingredients" в рецепте,
+    #     (анти-повтор ингредиента).
+    #     """
+    #     ingredients = self.initial_data.get("ingredients")
+    #     ingredients_id = [
+    #         ingredient["id"] for ingredient in ingredients
+    #     ]
+    #     if len(ingredients) != len(set(ingredients_id)):
+    #         raise serializers.ValidationError(
+    #             "Вы не можете добавить два одинаковых ингредиента"
+    #         )
+    #     return data
+
+    # def create_ingredients(self, ingredients, recipe):
+    #     """
+    #     Создает связанные объекты IngredientRecipe для рецепта.
+    #     """
+    #     ingredient_list = [
+    #         IngredientRecipe(
+    #             recipe=recipe,
+    #             ingredient=get_object_or_404(
+    #                 Ingredient, id=ingredient.get("id")
+    #             ),
+    #             amount=ingredient.get("amount")
+    #         )
+    #         for ingredient in ingredients
+    #     ]
+    #     IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
     def create(self, validated_data):
