@@ -296,33 +296,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        ingredients = data['ingredients']
+        ingredients = data["ingredients"]
         ingredient_list = []
-        if not ingredients:
-            raise serializers.ValidationError(
-                'Необходимо добавить хотя бы 1 ингредиент в рецепт')
         for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if int(item.get('amount')) < 1:
-                raise serializers.ValidationError(
-                    f'Кол-во ингредиента - {ingredient} - '
-                    f'не может быть меньше единицы')
+            ingredient = get_object_or_404(
+                Ingredient, id=item["id"]
+            )
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(
-                    f'Ингредиент - {ingredient} - уже добавлен в рецепт')
+                    f"Ингредиент - {ingredient} - уже есть в рецепте."
+                )
             ingredient_list.append(ingredient)
-        tags = data['tags']
-        if not tags:
-            raise serializers.ValidationError(
-                'Необходимо указать хотя бы один тэг')
-        for tag_name in tags:
-            if not Tag.objects.filter(name=tag_name).exists():
-                raise serializers.ValidationError(
-                    f'Тэга - {tag_name} - не существует')
-        cooking_time = data['cooking_time']
-        if int(cooking_time) < 1:
-            raise serializers.ValidationError(
-                'Время приготовления не может быть меньше минуты')
         return data
 
     def create_ingredients(self, ingredients, recipe):
