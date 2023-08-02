@@ -297,7 +297,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Валидатор нгредиентов в рецепте на анти-повтор.
+        Валидатор ингредиентов в рецепте на анти-повтор.
         """
         ingredients = data["ingredients"]
         ingredient_list = []
