@@ -314,24 +314,31 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Создает связанные объекты IngredientRecipe для рецепта.
         """
+        ingredient_list = []
+        existing_ingredients = IngredientRecipe.objects.filter(recipe=recipe)
+        existing_ingredients_dict = {
+            ingredient.ingredient.id:
+            ingredient for ingredient in existing_ingredients
+        }
         for ingredient in ingredients:
             ingredient_id = ingredient.get("id")
             amount = ingredient.get("amount")
-            existing_ingredient = get_object_or_404(
-                Ingredient, id=ingredient_id
-            )
-            try:
-                ingredient_recipe = IngredientRecipe.objects.get(
-                    recipe=recipe, ingredient=existing_ingredient
-                )
-                ingredient_recipe.amount = amount
-                ingredient_recipe.save()
-            except IngredientRecipe.DoesNotExist:
-                ingredient_recipe = IngredientRecipe.objects.create(
+            if ingredient_id in existing_ingredients_dict:
+                existing_ingredient = existing_ingredients_dict[
+                    ingredient_id
+                ]
+                existing_ingredient.amount += amount
+                existing_ingredient.full_clean()
+                existing_ingredient.save()
+            else:
+                new_ingredient = IngredientRecipe(
                     recipe=recipe,
-                    ingredient=existing_ingredient,
+                    ingredient=get_object_or_404(Ingredient, id=ingredient_id),
                     amount=amount
                 )
+                ingredient_list.append(new_ingredient)
+        if ingredient_list:
+            IngredientRecipe.objects.bulk_create(ingredient_list)
 
     @transaction.atomic
     def create(self, validated_data):
